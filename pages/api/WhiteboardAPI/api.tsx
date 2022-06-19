@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_PATH : String = "http://localhost:3000/whiteboard"
+const API_PATH : String = "https://retrospective-connectx-server.herokuapp.com/whiteboard"
 
 export async function createCategories(categoryName:string){
     let res = await axios.post(`${API_PATH}/createcatagories`,{
