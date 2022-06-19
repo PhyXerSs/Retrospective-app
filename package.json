@@ -68,7 +68,7 @@
   "devDependencies": {
     "@types/cors": "^2.8.12",
     "@types/node": "16.11.6",
-    "@types/react": "17.0.34",
+    "@types/react": "17.0.30",
     "@types/react-beautiful-dnd": "^13.1.2",
     "@types/react-csv": "^1.1.2",
     "@types/react-lazy-load-image-component": "^1.5.2",
