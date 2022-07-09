@@ -128,6 +128,9 @@ function ReUsername() {
                                                     })
                                                 }
                                             }))
+                                            firebase.database().ref(`userRetrospective/${userData.userId}`).update({
+                                                displayName:renamevalue
+                                            })
                                             setUserData({
                                                 ...userData,
                                                 userName:renamevalue

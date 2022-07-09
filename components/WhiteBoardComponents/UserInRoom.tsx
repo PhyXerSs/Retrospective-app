@@ -210,7 +210,7 @@ function UserInRoom({autoGetUrlRoomImage , setIsShareClick}:{autoGetUrlRoomImage
                 <div className='flex items-center mr-5 lg:mr-12 gap-2 md:gap-6 lg:gap-12 relative'>
                     <Popover.Group>
                         <Popover>
-                            <Popover.Button className="flex relative items-center h-14" style={{width:Math.min(168 , userInRoom.length *42) }}>
+                            <Popover.Button className="flex relative items-center h-14 outline-none " style={{width:Math.min(168 , userInRoom.length *42) }}>
                                 {renderUserInNavbar()}
                             </Popover.Button>
                             <Transition

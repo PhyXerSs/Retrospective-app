@@ -82,7 +82,10 @@ function ChangeProfilePicture() {
                     profilePicture:croppedImage
                 })
             }
-        }))    
+        }))
+        firebase.database().ref(`userRetrospective/${userData.userId}`).update({
+          photoURL:croppedImage
+        })  
         setUserData({
             ...userData,
             profilePicture:croppedImage

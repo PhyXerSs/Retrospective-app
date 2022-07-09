@@ -9,6 +9,7 @@ import getCroppedImg from "../../pages/api/PokerAPI/cropImage";
 import { isShowChangeBackgroundPictureState, whiteBoardUserDataState } from "../../WhiteBoardStateManagement/Atom";
 import { roomListType, userInRoomType } from "./Lobby";
 import { convertImageUrlToBase64 } from "../../pages/api/PokerAPI/api";
+import firebase from "../../firebase/firebase-config";
 
 function ChangeBackground() {
     const [isShowChangeBackgroundPicture, setIsShowChangeBackgroundPicture ] =useRecoilState(isShowChangeBackgroundPictureState);
@@ -32,12 +33,14 @@ function ChangeBackground() {
                 changeImageUrl,
                 croppedAreaPixels
             )) as string;
-    
             setUserData({
                 ...userData,
                 backgroundPicture:croppedImage
             })
-            localStorage.setItem('whiteboard_userBackgroundPicture' , croppedImage)
+            firebase.database().ref(`userRetrospective/${userData.userId}`).update({
+              backgroundPicture:croppedImage
+            }) 
+            
             setIsShowChangeBackgroundPicture(false);
             setChangeImageUrl("");
             setIsSelectUploadMode(false);

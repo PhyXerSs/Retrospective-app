@@ -22,6 +22,7 @@ function LoginSignUp() {
     const passwordRef = useRef<HTMLInputElement>(null);
     const signupEmailRef = useRef<HTMLInputElement>(null);
     const signupPasswordRef = useRef<HTMLInputElement>(null);
+    const signupDisplayName = useRef<HTMLInputElement>(null);
     const [ linkFromUrl , setLinkFromUrl ] = useRecoilState(linkFromUrlState);
     const [ selectImage , setSelectImage ] = useState<string>('-');
     const [ isSelectedImage , setIsSelectedImage] = useState<boolean>(false);
@@ -46,7 +47,9 @@ function LoginSignUp() {
           },
         },
       });
-    const { width, height } = useWindowSize()
+    const { width, height } = useWindowSize();
+    const [ isEmailSignupError , setIsEmailSignupError ] = useState<boolean>(false);
+    const [ isPasswordSignupError , setIsPasswordSignupError ] = useState<boolean>(false);
     useEffect(()=>{
         if(userData.userId === '-' && roomData.roomId === '-'){
             setDelayAnimation(0);
@@ -55,16 +58,39 @@ function LoginSignUp() {
     },[userData , roomData])
 
     useEffect(()=>{
+        // handle login
         firebase.auth().onAuthStateChanged(authUser => {
-            console.log(authUser);
+            // console.log(authUser);
             if(authUser){
-                let user = {} as whiteBoardUserDataStateType;
-                user.userId = authUser.uid;
-                user.userName = authUser?.displayName as string;
-                user.profilePicture = authUser?.photoURL as string;
-                user.backgroundPicture = ''
-                setUserData(user);
+                firebase.database().ref(`/userRetrospective/${authUser.uid}`).once('value' , snapshot =>{
+                    // old user case
+                    if(snapshot.val()){
+                        let user = {} as whiteBoardUserDataStateType;
+                        user.userId = authUser.uid;
+                        user.userName = snapshot.val()?.displayName as string;
+                        user.profilePicture = snapshot.val()?.photoURL as string;
+                        user.backgroundPicture = snapshot.val()?.backgroundPicture as string;
+                        setUserData(user);
+                    }else{// new user case (login with gmail)
+                        firebase.database().ref(`/userRetrospective/${authUser.uid}`).set({
+                            displayName:authUser?.displayName,
+                            photoURL:authUser?.photoURL,
+                            backgroundPicture:'',
+                        })
+                        let user = {} as whiteBoardUserDataStateType;
+                        user.userId = authUser.uid;
+                        user.userName = authUser?.displayName as string;
+                        user.profilePicture = authUser?.photoURL as string;
+                        user.backgroundPicture = ''
+                        setUserData(user);
+                    }
+                })
+                let roomIdFromPath = router.asPath.split('#')[1] as string;
+                if(roomIdFromPath !== undefined){
+                    setLinkFromUrl(roomIdFromPath);
+                }
             }
+            
         })
         // if(localStorage.getItem('whiteboard_userId') !== null){
         //     let user = {} as whiteBoardUserDataStateType;
@@ -74,10 +100,7 @@ function LoginSignUp() {
         //     user.backgroundPicture = localStorage.getItem('whiteboard_userBackgroundPicture') as string;
         //     setUserData(user);
         // }
-        // let roomIdFromPath = router.asPath.split('#')[1] as string;
-        // if(roomIdFromPath !== undefined){
-        //     setLinkFromUrl(roomIdFromPath);
-        // }
+        
     },[])
 
     useEffect(()=>{
@@ -89,7 +112,7 @@ function LoginSignUp() {
                         profilePicture:userData.profilePicture,
                         isOnline:true,
                     }),
-                    firebase.database().ref(`userRetrospective/${userData.userId}`).set({
+                    firebase.database().ref(`userRetrospective/${userData.userId}`).update({
                         statusOnline:true,
                         room:linkFromUrl
                     }),
@@ -109,6 +132,51 @@ function LoginSignUp() {
         }
     },[linkFromUrl , userData])
 
+    async function handleLogin(e:any) {
+        e.preventDefault();
+        if(emailRef.current && passwordRef.current){
+            try{
+                await firebase.auth().signInWithEmailAndPassword(emailRef.current?.value , passwordRef.current?.value);
+            }
+            catch(err:any){
+                console.log(err);
+            }
+        }
+    }
+
+    async function handleSignup(e:any){
+        e.preventDefault();
+        setIsEmailSignupError(false);
+        setIsPasswordSignupError(false);
+        if(signupEmailRef.current && signupPasswordRef.current && signupDisplayName.current){
+            try{
+                let resultSignup = await firebase.auth().createUserWithEmailAndPassword(signupEmailRef.current.value , signupPasswordRef.current.value);
+                console.log(resultSignup);
+                await firebase.database().ref(`/userRetrospective/${resultSignup?.user?.uid}`).set({
+                    displayName:signupDisplayName.current.value.replaceAll(" ","").replaceAll("-",""),
+                    photoURL:'/static/images/whiteboard/profile.png',
+                    backgroundPicture:'',
+                })
+                let newUser = {} as whiteBoardUserDataStateType;
+                newUser.userId = resultSignup?.user?.uid as string;
+                newUser.userName = signupDisplayName.current.value.replaceAll(" ","").replaceAll("-","");
+                newUser.profilePicture = "/static/images/whiteboard/profile.png"
+                newUser.backgroundPicture = ""
+                setDelayAnimation(-1);
+                setTimeout(()=>{
+                    setUserData(newUser);
+                },600);
+            }catch(err:any){
+                if(err?.message === 'The email address is badly formatted.'){
+                    setIsEmailSignupError(true);
+                }
+                if(err?.message === 'Password should be at least 6 characters'){
+                    setIsPasswordSignupError(true);
+                }
+            }
+        }
+    }
+
     function RenderLoginOrSignUp(){
         if(loginSignupMode === 'login' && delayAnimation === 0){
             return(
@@ -119,14 +187,16 @@ function LoginSignUp() {
                         exit ={{ opacity : 0  , x:0}}
                         transition={{  duration:0.5}}
                     >
-                        <div className="w-full flex flex-col items-center max-w-[600px] h-fit">
+                        <div className="w-full flex flex-col items-center max-w-[350px] md:max-w-[500px] h-fit">
                             <motion.p className="text-[32px] font-[800]" style={{fontFamily:"'Montserrat', sans-serif"}}
                                     animate={{ opacity: 1 , y:0 }}
                                     initial={{opacity : 0 , y:-150 }}
                                     exit ={{ opacity : 0  }}
                                     transition={{  duration:0.3}}
                             >Sign in</motion.p>
-                            <form  className="w-full" >
+                            <form  className="w-full" 
+                                onSubmit={handleLogin}
+                            >
                                 <motion.div
                                     animate={{ opacity: 1 , x:0 }}
                                     initial={{opacity : 0 , x:-500 }}
@@ -141,7 +211,7 @@ function LoginSignUp() {
                                     exit ={{ opacity : 0  ,}}
                                     transition={{  duration: 0.9  }}
                                 >
-                                    <CssTextField required inputRef={passwordRef} fullWidth variant="outlined" label="password" size={'small'} style={{ marginTop:'30px'}} InputLabelProps={{ required: false }}/>
+                                    <CssTextField required type={'password'} inputRef={passwordRef} fullWidth variant="outlined" label="password" size={'small'} style={{ marginTop:'30px'}} InputLabelProps={{ required: false }}/>
                                 </motion.div>
                                 <motion.div
                                     animate={{ opacity: 1 , scale:1 }}
@@ -177,7 +247,7 @@ function LoginSignUp() {
                                     exit ={{ opacity : 0 }}
                                     transition={{  duration: 1.2 }}
                                 >
-                                    <button type="submit" className={`w-full max-w-[250px] flex justify-center items-center drop-shadow-lg ${isLoading ? 'bg-primary-blue-2 cursor-default' : 'bg-[#334155] hover:bg-[#546c8d] cursor-pointer'} duration-200 ease-in text-white font-semibold py-2 rounded-md`} style={{fontFamily:"'Montserrat', sans-serif"}}>
+                                    <button type="submit" className={`w-full md:max-w-[250px] flex justify-center items-center drop-shadow-lg ${isLoading ? 'bg-primary-blue-2 cursor-default' : 'bg-[#334155] hover:bg-[#546c8d] cursor-pointer'} duration-200 ease-in text-white font-semibold py-2 rounded-md`} style={{fontFamily:"'Montserrat', sans-serif"}}>
                                         Sign in
                                     </button>
                                 </motion.div>
@@ -295,7 +365,7 @@ function LoginSignUp() {
         else if(loginSignupMode === 'signup' && delayAnimation === 1){
             return(
                 <div className="w-full flex justify-center overflow-auto h-full relative py-10">
-                    <motion.div className=" w-9/12 max-w-[600px] flex flex-col justify-start items-start drop-shadow-lg bg-white px-28 py-6 pt-12 rounded-xl h-full"
+                    <motion.div className=" w-9/12 max-w-[600px] flex flex-col justify-start items-start drop-shadow-lg bg-white px-5 md:px-28 py-6 pt-12 rounded-xl h-full"
                         animate={{ opacity: 1  }}
                         initial={{opacity : 0 ,x:0 }}
                         exit ={{ opacity : 0  }}
@@ -307,14 +377,28 @@ function LoginSignUp() {
                             exit ={{ opacity : 0  }}
                             transition={{  duration:0.3}}
                         >Sign up</motion.p>
-                        <form  className="w-full" >
+                        <form  className="w-full" 
+                            onSubmit={handleSignup}
+                        >
                             <motion.div
                                 animate={{ opacity: 1 , x:0 }}
                                 initial={{opacity : 0 , x:-500 }}
                                 exit ={{ opacity : 0  ,}}
                                 transition={{  duration: 0.6 }}
+                                className="w-full flex flex-col items-start"
                             >
-                                <CssTextField required inputRef={signupEmailRef} fullWidth variant="outlined" label="email" size={'small'} style={{ marginTop:'40px'}}/>
+                                <CssTextField required inputRef={signupEmailRef} fullWidth variant="outlined" label="email" size={'small'} style={{ marginTop:'40px'}} InputLabelProps={{ required: false }}/>
+                                {isEmailSignupError && <p className="pl-2 text-danger text-[14px]">Invalid email address format.</p>}
+                            </motion.div>
+                            <motion.div
+                                animate={{ opacity: 1 , x:0 }}
+                                initial={{opacity : 0 , x:-500 }}
+                                exit ={{ opacity : 0  ,}}
+                                transition={{  duration: 0.9  }}
+                                className="w-full flex flex-col items-start"
+                            >
+                                <CssTextField required type="password" inputRef={signupPasswordRef} fullWidth variant="outlined" label="password" size={'small'} style={{ marginTop:'30px'}} InputLabelProps={{ required: false }}/>
+                                {isPasswordSignupError && <p className="pl-2 text-danger text-[14px]">Password should be at least 6 characters.</p>}
                             </motion.div>
                             <motion.div
                                 animate={{ opacity: 1 , x:0 }}
@@ -322,7 +406,7 @@ function LoginSignUp() {
                                 exit ={{ opacity : 0  ,}}
                                 transition={{  duration: 0.9  }}
                             >
-                                <CssTextField required inputRef={signupPasswordRef} fullWidth variant="outlined" label="password" size={'small'} style={{ marginTop:'30px'}}/>
+                                <CssTextField required inputRef={signupDisplayName} fullWidth variant="outlined" label="displayname" size={'small'} style={{ marginTop:'30px'}} InputLabelProps={{ required: false }}/>
                             </motion.div>
                             <motion.div
                                 animate={{ opacity: 1 , scale:1 }}
@@ -358,7 +442,7 @@ function LoginSignUp() {
                                 exit ={{ opacity : 0 }}
                                 transition={{  duration: 1.2 }}
                             >
-                                <button type="submit" className={`w-full max-w-[250px] flex justify-center items-center drop-shadow-lg ${isLoading ? 'bg-primary-blue-2 cursor-default' : 'bg-[#334155] hover:bg-[#546c8d] cursor-pointer'} duration-200 ease-in text-white font-semibold py-2 rounded-md`} style={{fontFamily:"'Montserrat', sans-serif"}}>
+                                <button type="submit" className={`w-full md:max-w-[250px] flex justify-center items-center drop-shadow-lg ${isLoading ? 'bg-primary-blue-2 cursor-default' : 'bg-[#334155] hover:bg-[#546c8d] cursor-pointer'} duration-200 ease-in text-white font-semibold py-2 rounded-md`} style={{fontFamily:"'Montserrat', sans-serif"}}>
                                     Sign up
                                 </button>
                             </motion.div>

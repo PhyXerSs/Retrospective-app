@@ -35,6 +35,21 @@ function ModalRoomSelection({room , index , isHoverRoom , setIsHoverRoom , setIs
         return str?.length > n ? str.substr(0,n-1) + "..." : str;
     }
 
+    async function updateJoinRoomToFirebase() {
+        await Promise.all([
+            firebase.database().ref(`retrospective/${room.roomId}/roomDetail/userInRoom/${userData.userId}`).set({
+                name:userData.userName,
+                profilePicture:userData.profilePicture,
+                isOnline:true,
+                openAt:new Date().getTime(),
+            }),
+            firebase.database().ref(`userRetrospective/${userData.userId}`).update({
+                statusOnline:true,
+                room:room.roomId
+            })
+        ])
+    }
+
     return (
         <motion.div key={`roomList${index}`} className={`w-[260px] h-[210px] flex flex-col justify-start items-center rounded-xl bg-white hover:bg-gray-light ease-in duration-200 relative ${isHoverRoom === index ? 'z-[10]' : 'z-[0]'}`}
             style={{boxShadow: 'rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.05) 0px 8px 32px'}}
@@ -48,18 +63,7 @@ function ModalRoomSelection({room , index , isHoverRoom , setIsHoverRoom , setIs
                 roomSelect.roomId = room.roomId;
                 roomSelect.roomName = room.roomName;
                 roomSelect.createBy = room.createBy;
-                await Promise.all([
-                    firebase.database().ref(`retrospective/${room.roomId}/roomDetail/userInRoom/${userData.userId}`).set({
-                        name:userData.userName,
-                        profilePicture:userData.profilePicture,
-                        isOnline:true,
-                        openAt:firebaseServer.database.ServerValue.TIMESTAMP,
-                    }),
-                    firebase.database().ref(`userRetrospective/${userData.userId}`).set({
-                        statusOnline:true,
-                        room:room.roomId
-                    })
-                ])
+                updateJoinRoomToFirebase();
                 setRoomData(roomSelect);
             }}
             onMouseEnter={()=>{
@@ -126,6 +130,7 @@ function ModalRoomSelection({room , index , isHoverRoom , setIsHoverRoom , setIs
                         <Popover.Button className="flex justify-start p-4 items-center w-full bg-whitecursor-pointer duration-150 ease-in hover:bg-[#e8f3ff] gap-2"
                             onClick={async(e:any)=>{
                                 e.stopPropagation();
+                                updateJoinRoomToFirebase();
                                 let newTab = `${window.location.protocol}//${window.location.hostname}:${window.location?.port}${window.location.pathname}#${room.roomId}`;
                                 window.open(newTab);
                             }}
