@@ -9,8 +9,9 @@ import GoogleLogin from 'react-google-login';
 import { v4 as uuid } from 'uuid';
 import Lobby from './Lobby';
 import { useRouter } from "next/router";
-import firebase from '../../firebase/firebase-config';
+import firebase, { signInWithGoogle } from '../../firebase/firebase-config';
 import UploadPhotoInLogin from './UploadPhotoInLogin';
+import { useWindowSize } from 'usehooks-ts'
 function LoginSignUp() {
     const [ userData , setUserData ] = useRecoilState(whiteBoardUserDataState);
     const [ roomData , setRoomData ] = useRecoilState(WhiteBoardRoomDataState); 
@@ -45,7 +46,7 @@ function LoginSignUp() {
           },
         },
       });
-
+    const { width, height } = useWindowSize()
     useEffect(()=>{
         if(userData.userId === '-' && roomData.roomId === '-'){
             setDelayAnimation(0);
@@ -54,18 +55,29 @@ function LoginSignUp() {
     },[userData , roomData])
 
     useEffect(()=>{
-        if(localStorage.getItem('whiteboard_userId') !== null){
-            let user = {} as whiteBoardUserDataStateType;
-            user.userId = localStorage.getItem('whiteboard_userId') as string;
-            user.userName = localStorage.getItem('whiteboard_userName') as string;
-            user.profilePicture = localStorage.getItem('whiteboard_userProfilePicture') as string;
-            user.backgroundPicture = localStorage.getItem('whiteboard_userBackgroundPicture') as string;
-            setUserData(user);
-        }
-        let roomIdFromPath = router.asPath.split('#')[1] as string;
-        if(roomIdFromPath !== undefined){
-            setLinkFromUrl(roomIdFromPath);
-        }
+        firebase.auth().onAuthStateChanged(authUser => {
+            console.log(authUser);
+            if(authUser){
+                let user = {} as whiteBoardUserDataStateType;
+                user.userId = authUser.uid;
+                user.userName = authUser?.displayName as string;
+                user.profilePicture = authUser?.photoURL as string;
+                user.backgroundPicture = ''
+                setUserData(user);
+            }
+        })
+        // if(localStorage.getItem('whiteboard_userId') !== null){
+        //     let user = {} as whiteBoardUserDataStateType;
+        //     user.userId = localStorage.getItem('whiteboard_userId') as string;
+        //     user.userName = localStorage.getItem('whiteboard_userName') as string;
+        //     user.profilePicture = localStorage.getItem('whiteboard_userProfilePicture') as string;
+        //     user.backgroundPicture = localStorage.getItem('whiteboard_userBackgroundPicture') as string;
+        //     setUserData(user);
+        // }
+        // let roomIdFromPath = router.asPath.split('#')[1] as string;
+        // if(roomIdFromPath !== undefined){
+        //     setLinkFromUrl(roomIdFromPath);
+        // }
     },[])
 
     useEffect(()=>{
@@ -100,14 +112,93 @@ function LoginSignUp() {
     function RenderLoginOrSignUp(){
         if(loginSignupMode === 'login' && delayAnimation === 0){
             return(
-                <div className="w-full flex justify-center items-center">
-                    <motion.div className="flex flex-1 h-screen justify-center items-center"
+                <div className="w-full flex justify-center items-center overscroll-auto">
+                    <motion.div className="flex flex-col flex-1 justify-center items-center px-[70px] overscroll-auto"
                         animate={{ opacity: 1 , x:0 }}
                         initial={{opacity : 0 , x:0 }}
                         exit ={{ opacity : 0  , x:0}}
                         transition={{  duration:0.5}}
                     >
-                        <div className=" w-9/12 max-w-[500px] h-full flex flex-col justify-center items-start">
+                        <div className="w-full flex flex-col items-center max-w-[600px] h-fit">
+                            <motion.p className="text-[32px] font-[800]" style={{fontFamily:"'Montserrat', sans-serif"}}
+                                    animate={{ opacity: 1 , y:0 }}
+                                    initial={{opacity : 0 , y:-150 }}
+                                    exit ={{ opacity : 0  }}
+                                    transition={{  duration:0.3}}
+                            >Sign in</motion.p>
+                            <form  className="w-full" >
+                                <motion.div
+                                    animate={{ opacity: 1 , x:0 }}
+                                    initial={{opacity : 0 , x:-500 }}
+                                    exit ={{ opacity : 0  ,}}
+                                    transition={{  duration: 0.6 }}
+                                >
+                                    <CssTextField required inputRef={emailRef} fullWidth variant="outlined" label="email" size={'small'} style={{ marginTop:'40px'}} InputLabelProps={{ required: false }}/>
+                                </motion.div>
+                                <motion.div
+                                    animate={{ opacity: 1 , x:0 }}
+                                    initial={{opacity : 0 , x:-500 }}
+                                    exit ={{ opacity : 0  ,}}
+                                    transition={{  duration: 0.9  }}
+                                >
+                                    <CssTextField required inputRef={passwordRef} fullWidth variant="outlined" label="password" size={'small'} style={{ marginTop:'30px'}} InputLabelProps={{ required: false }}/>
+                                </motion.div>
+                                <motion.div
+                                    animate={{ opacity: 1 , scale:1 }}
+                                    initial={{opacity : 0 , scale:0 }}
+                                    exit ={{ opacity : 0  ,}}
+                                    transition={{  duration:1.2}}
+                                >
+                                    <div className="w-full flex justify-center items-center">
+                                        <p className="text-h5 font-bold mt-10 " style={{fontFamily:"'Montserrat', sans-serif"}}>Or Sign in with</p>
+                                    </div>
+                                    
+                                    <button onClick={signInWithGoogle} className="w-full flex justify-center items-center py-3 border-[1px] border-secondary-gray-3 rounded-md outline-none mt-8 gap-3">
+                                                <img src="/static/images/whiteboard/googleIcon.jpg"  alt="" className="w-4" />
+                                                <p className="text-secondary-gray-3 text-h5 font-semibold" style={{fontFamily:"'Montserrat', sans-serif"}}>Sign in with Google</p>
+                                    </button>
+                                    {/* <GoogleLogin
+                                        clientId="40517616525-di1vjhemnupkg9iavccfft03b2k8egkf.apps.googleusercontent.com"
+                                        render={renderProps => (
+                                            <button onClick={renderProps.onClick} disabled={renderProps.disabled} className="w-full flex justify-center items-center py-3 border-[1px] border-secondary-gray-3 rounded-md outline-none mt-8 gap-3">
+                                                <img src="/static/images/whiteboard/googleIcon.jpg"  alt="" className="w-4" />
+                                                <p className="text-secondary-gray-3 text-h5 font-semibold" style={{fontFamily:"'Montserrat', sans-serif"}}>Sign in with Google</p>
+                                            </button>
+                                        )}
+                                        buttonText="Login"
+                                        onSuccess={onLoginWithGoogleSuccess}
+                                        onFailure={onLoginWithGoogleFailure}
+                                        cookiePolicy={'single_host_origin'}
+                                    /> */}
+                                </motion.div>
+                                <motion.div className="flex w-full justify-center items-center mt-16"
+                                    animate={{ opacity: 1 ,  x:0}}
+                                    initial={{opacity : 0 ,  x:-500}}
+                                    exit ={{ opacity : 0 }}
+                                    transition={{  duration: 1.2 }}
+                                >
+                                    <button type="submit" className={`w-full max-w-[250px] flex justify-center items-center drop-shadow-lg ${isLoading ? 'bg-primary-blue-2 cursor-default' : 'bg-[#334155] hover:bg-[#546c8d] cursor-pointer'} duration-200 ease-in text-white font-semibold py-2 rounded-md`} style={{fontFamily:"'Montserrat', sans-serif"}}>
+                                        Sign in
+                                    </button>
+                                </motion.div>
+
+                                <motion.div className="flex w-full justify-center items-center mt-10 gap-3" style={{fontFamily:"'Montserrat', sans-serif"}}
+                                    animate={{ opacity: 1 }}
+                                    initial={{opacity : 0 }}
+                                    exit ={{ opacity : 0 }}
+                                    transition={{  duration: 0.5 }}
+                                >
+                                    <p className="text-h5 font-semibold" >{`Don't have an account?`}</p>
+                                    <p className="text-h5 font-semibold hover:text-[#4682ef] cursor-pointer"
+                                        onClick={()=>{
+                                            setDelayAnimation(1);
+                                            setTimeout(()=>{setLoginSignupMode('signup')},1000);
+                                        }}
+                                    >Sign up</p>
+                                </motion.div>
+                            </form>
+                        </div>
+                        {/* <div className=" w-9/12 max-w-[500px] h-full flex flex-col justify-center items-start">
                             <motion.div className="flex flex-col items-start justify-start h-[180px]"
                                 animate={{ opacity: 1 , y:0 }}
                                 initial={{opacity : 0 , y:-150 }}
@@ -190,9 +281,9 @@ function LoginSignUp() {
                                     
                                 </form>
                             </div>
-                        </div>
+                        </div> */}
                     </motion.div>
-                    <motion.div className=" hidden md:flex flex-1 h-screen " style={{backgroundImage:'url(/static/images/whiteboard/bglogin.png)' , backgroundSize:'cover' , backgroundPosition:'center' , backgroundRepeat:'no-repeat'}}
+                    <motion.div className=" hidden md:flex flex-1 h-screen min-h-[500px]" style={{backgroundImage:'url(/static/images/whiteboard/bglogin.png)' , backgroundSize:'cover' , backgroundPosition:'center' , backgroundRepeat:'no-repeat'}}
                         animate={{ opacity: 1 , x:0 }}
                         initial={{opacity : 0 , x:0 }}
                         exit ={{ opacity : 0  , x: 1000}}
@@ -201,98 +292,101 @@ function LoginSignUp() {
                 </div>
             );
         }
-        // else if(loginSignupMode === 'signup' && delayAnimation === 1){
-        //     return(
-        //         <div className="w-full flex justify-center items-center">
-        //                 <motion.div className=" w-9/12 max-w-[600px] flex flex-col justify-start items-start drop-shadow-lg bg-white px-28 pb-6 pt-12 rounded-xl"
-        //                     animate={{ opacity: 1  }}
-        //                     initial={{opacity : 0 ,x:0 }}
-        //                     exit ={{ opacity : 0  }}
-        //                     transition={{  duration: 0.5 }}
-        //                 >
-        //                     <motion.p className="text-[32px] font-[800]" style={{fontFamily:"'Montserrat', sans-serif"}}
-        //                         animate={{ opacity: 1 , y:0 }}
-        //                         initial={{opacity : 0 , y:-150 }}
-        //                         exit ={{ opacity : 0  }}
-        //                         transition={{  duration:0.3}}
-        //                     >Sign up</motion.p>
-        //                     <form  className="w-full" >
-        //                         <motion.div
-        //                             animate={{ opacity: 1 , x:0 }}
-        //                             initial={{opacity : 0 , x:-500 }}
-        //                             exit ={{ opacity : 0  ,}}
-        //                             transition={{  duration: 0.6 }}
-        //                         >
-        //                             <CssTextField required inputRef={signupEmailRef} fullWidth variant="outlined" label="email" size={'small'} style={{ marginTop:'40px'}}/>
-        //                         </motion.div>
-        //                         <motion.div
-        //                             animate={{ opacity: 1 , x:0 }}
-        //                             initial={{opacity : 0 , x:-500 }}
-        //                             exit ={{ opacity : 0  ,}}
-        //                             transition={{  duration: 0.9  }}
-        //                         >
-        //                             <CssTextField required inputRef={signupPasswordRef} fullWidth variant="outlined" label="password" size={'small'} style={{ marginTop:'30px'}}/>
-        //                         </motion.div>
-        //                         <motion.div
-        //                             animate={{ opacity: 1 , scale:1 }}
-        //                             initial={{opacity : 0 , scale:0 }}
-        //                             exit ={{ opacity : 0  ,}}
-        //                             transition={{  duration:1.2}}
-        //                         >
-        //                             <div className="w-full flex justify-center items-center">
-        //                                 <p className="text-h5 font-bold mt-10 " style={{fontFamily:"'Montserrat', sans-serif"}}>Or Sign up with</p>
-        //                             </div>
-                                    
-        //                             <GoogleLogin
-        //                                 clientId="40517616525-di1vjhemnupkg9iavccfft03b2k8egkf.apps.googleusercontent.com"
-        //                                 render={renderProps => (
-        //                                     <button onClick={renderProps.onClick} disabled={renderProps.disabled} className="w-full flex justify-center items-center py-3 border-[1px] border-secondary-gray-3 rounded-md outline-none mt-8 gap-3">
-        //                                         <img src="/static/images/whiteboard/googleIcon.jpg"  alt="" className="w-4" />
-        //                                         <p className="text-secondary-gray-3 text-h5 font-semibold" style={{fontFamily:"'Montserrat', sans-serif"}}>Sign up with Google</p>
-        //                                     </button>
-        //                                 )}
-        //                                 buttonText="Login"
-        //                                 onSuccess={responseGoogle}
-        //                                 onFailure={responseGoogle}
-        //                                 cookiePolicy={'single_host_origin'}
-        //                             />
-        //                         </motion.div>
-        //                         <motion.div className="flex w-full justify-center items-center mt-16"
-        //                             animate={{ opacity: 1 ,  x:0}}
-        //                             initial={{opacity : 0 ,  x:-500}}
-        //                             exit ={{ opacity : 0 }}
-        //                             transition={{  duration: 1.2 }}
-        //                         >
-        //                             <button type="submit" className={`w-full max-w-[250px] flex justify-center items-center drop-shadow-lg ${isLoading ? 'bg-primary-blue-2 cursor-default' : 'bg-[#334155] hover:bg-[#546c8d] cursor-pointer'} duration-200 ease-in text-white font-semibold py-2 rounded-md`} style={{fontFamily:"'Montserrat', sans-serif"}}>
-        //                                 Sign up
-        //                             </button>
-        //                         </motion.div>
-
-        //                         <motion.div className="flex w-full justify-center items-center mt-10 gap-3" style={{fontFamily:"'Montserrat', sans-serif"}}
-        //                             animate={{ opacity: 1 }}
-        //                             initial={{opacity : 0 }}
-        //                             exit ={{ opacity : 0 }}
-        //                             transition={{  duration: 0.5 }}
-        //                         >
-        //                             <p className="text-h5 font-semibold" >Already have an account ?</p>
-        //                             <p className="text-h5 font-semibold hover:text-[#4682ef] cursor-pointer"
-        //                                 onClick={()=>{
-        //                                     setDelayAnimation(0);
-        //                                     setTimeout(()=>{setLoginSignupMode('login')},1000);
-        //                                 }}
-        //                             >Log in</p>
-        //                         </motion.div>
-        //                     </form>
-        //                 </motion.div>
-        //         </div>
-        //     );
-        // }
+        else if(loginSignupMode === 'signup' && delayAnimation === 1){
+            return(
+                <div className="w-full flex justify-center overflow-auto h-full relative py-10">
+                    <motion.div className=" w-9/12 max-w-[600px] flex flex-col justify-start items-start drop-shadow-lg bg-white px-28 py-6 pt-12 rounded-xl h-full"
+                        animate={{ opacity: 1  }}
+                        initial={{opacity : 0 ,x:0 }}
+                        exit ={{ opacity : 0  }}
+                        transition={{  duration: 0.5 }}
+                    >
+                        <motion.p className="text-[32px] font-[800]" style={{fontFamily:"'Montserrat', sans-serif"}}
+                            animate={{ opacity: 1 , y:0 }}
+                            initial={{opacity : 0 , y:-150 }}
+                            exit ={{ opacity : 0  }}
+                            transition={{  duration:0.3}}
+                        >Sign up</motion.p>
+                        <form  className="w-full" >
+                            <motion.div
+                                animate={{ opacity: 1 , x:0 }}
+                                initial={{opacity : 0 , x:-500 }}
+                                exit ={{ opacity : 0  ,}}
+                                transition={{  duration: 0.6 }}
+                            >
+                                <CssTextField required inputRef={signupEmailRef} fullWidth variant="outlined" label="email" size={'small'} style={{ marginTop:'40px'}}/>
+                            </motion.div>
+                            <motion.div
+                                animate={{ opacity: 1 , x:0 }}
+                                initial={{opacity : 0 , x:-500 }}
+                                exit ={{ opacity : 0  ,}}
+                                transition={{  duration: 0.9  }}
+                            >
+                                <CssTextField required inputRef={signupPasswordRef} fullWidth variant="outlined" label="password" size={'small'} style={{ marginTop:'30px'}}/>
+                            </motion.div>
+                            <motion.div
+                                animate={{ opacity: 1 , scale:1 }}
+                                initial={{opacity : 0 , scale:0 }}
+                                exit ={{ opacity : 0  ,}}
+                                transition={{  duration:1.2}}
+                            >
+                                <div className="w-full flex justify-center items-center">
+                                    <p className="text-h5 font-bold mt-10 " style={{fontFamily:"'Montserrat', sans-serif"}}>Or Sign in with</p>
+                                </div>
+                                
+                                <button onClick={signInWithGoogle} className="w-full flex justify-center items-center py-3 border-[1px] border-secondary-gray-3 rounded-md outline-none mt-8 gap-3">
+                                            <img src="/static/images/whiteboard/googleIcon.jpg"  alt="" className="w-4" />
+                                            <p className="text-secondary-gray-3 text-h5 font-semibold" style={{fontFamily:"'Montserrat', sans-serif"}}>Sign in with Google</p>
+                                </button>
+                                {/* <GoogleLogin
+                                    clientId="40517616525-di1vjhemnupkg9iavccfft03b2k8egkf.apps.googleusercontent.com"
+                                    render={renderProps => (
+                                        <button onClick={renderProps.onClick} disabled={renderProps.disabled} className="w-full flex justify-center items-center py-3 border-[1px] border-secondary-gray-3 rounded-md outline-none mt-8 gap-3">
+                                            <img src="/static/images/whiteboard/googleIcon.jpg"  alt="" className="w-4" />
+                                            <p className="text-secondary-gray-3 text-h5 font-semibold" style={{fontFamily:"'Montserrat', sans-serif"}}>Sign up with Google</p>
+                                        </button>
+                                    )}
+                                    buttonText="Login"
+                                    onSuccess={responseGoogle}
+                                    onFailure={responseGoogle}
+                                    cookiePolicy={'single_host_origin'}
+                                /> */}
+                            </motion.div>
+                            <motion.div className="flex w-full justify-center items-center mt-16"
+                                animate={{ opacity: 1 ,  x:0}}
+                                initial={{opacity : 0 ,  x:-500}}
+                                exit ={{ opacity : 0 }}
+                                transition={{  duration: 1.2 }}
+                            >
+                                <button type="submit" className={`w-full max-w-[250px] flex justify-center items-center drop-shadow-lg ${isLoading ? 'bg-primary-blue-2 cursor-default' : 'bg-[#334155] hover:bg-[#546c8d] cursor-pointer'} duration-200 ease-in text-white font-semibold py-2 rounded-md`} style={{fontFamily:"'Montserrat', sans-serif"}}>
+                                    Sign up
+                                </button>
+                            </motion.div>
+                            <motion.div className="flex w-full justify-center items-center mt-10 gap-3" style={{fontFamily:"'Montserrat', sans-serif"}}
+                                animate={{ opacity: 1 }}
+                                initial={{opacity : 0 }}
+                                exit ={{ opacity : 0 }}
+                                transition={{  duration: 0.5 }}
+                            >
+                                <p className="text-h5 font-semibold" >Already have an account ?</p>
+                                <p className="text-h5 font-semibold hover:text-[#4682ef] cursor-pointer"
+                                    onClick={()=>{
+                                        setDelayAnimation(0);
+                                        setTimeout(()=>{setLoginSignupMode('login')},1000);
+                                    }}
+                                >Sign in</p>
+                            </motion.div>
+                        </form>
+                    </motion.div>
+                </div>
+            );
+        }
     }   
     
     return (
         <AnimatePresence>
             {userData.userId === '-' && roomData.roomId === '-' &&
-            <motion.div className="h-screen w-screen fixed top-0 left-0 flex justify-center items-center z-[1500] bg-white ">
+            <motion.div className={`min-h-screen max-h-full w-screen fixed top-0 left-0 flex flex-col ${height < 500 ? 'justify-start' :'justify-center'} items-center z-[1500] bg-white overflow-auto`}>
                 <AnimatePresence>
                     {RenderLoginOrSignUp()}
                     {isSelectedImage && <UploadPhotoInLogin isSelectedImage={isSelectedImage} setIsSelectedImage={setIsSelectedImage} setSelectImage={setSelectImage}/>}

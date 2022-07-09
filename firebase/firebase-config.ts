@@ -14,6 +14,11 @@ try {
   if (!/already exists/.test(err.message)) {
     console.error('Firebase initialization error', err.stack)}
 }
+
+const provider = new firebase.auth.GoogleAuthProvider();
+provider.setCustomParameters({ prompt: 'select_account' });
+export const signInWithGoogle = () => firebase.auth().signInWithPopup(provider);
+
 const fire = firebase;
 export default fire;
 

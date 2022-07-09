@@ -78,7 +78,7 @@ function UserProfileModal() {
         setCountRoomStay(roomStay);
         setCountTeamStay(teamStay.length);
     },[roomList,userData])
-
+ 
     return (
             <>
                 <div className={`w-full rounded-t-lg flex flex-col items-center justify-center gap-1 pt-12 pb-5`} style={{ backgroundImage:userData.backgroundPicture==="" ? 'linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(52,106,221,1) 0%)' : `url(${userData.backgroundPicture})`, backgroundSize:'cover' , backgroundRepeat:'no-repeat' ,backgroundPosition:'center' }}>
@@ -112,7 +112,7 @@ function UserProfileModal() {
                         localStorage.removeItem('whiteboard_userId');
                         localStorage.removeItem('whiteboard_userName');
                         localStorage.removeItem('whiteboard_userProfilePicture');
-
+                        firebase.auth().signOut();
                         if(roomData.roomId !== '-'){
                             await Promise.all([
                                 firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/userInRoom/${userData.userId}`).update({
