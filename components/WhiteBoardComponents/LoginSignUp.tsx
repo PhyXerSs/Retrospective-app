@@ -48,12 +48,16 @@ function LoginSignUp() {
         },
       });
     const { width, height } = useWindowSize();
-    const [ isEmailSignupError , setIsEmailSignupError ] = useState<boolean>(false);
+    const [ isEmailSignupError , setIsEmailSignupError ] = useState<string>('');
     const [ isPasswordSignupError , setIsPasswordSignupError ] = useState<boolean>(false);
+    const [ emailSinginErrorType , setEmailSinginErrorType ] = useState<string>('');
     useEffect(()=>{
         if(userData.userId === '-' && roomData.roomId === '-'){
             setDelayAnimation(0);
             setLoginSignupMode('login');
+            setIsEmailSignupError('');
+            setIsPasswordSignupError(false);
+            setEmailSinginErrorType('');
         }
     },[userData , roomData])
 
@@ -132,6 +136,15 @@ function LoginSignUp() {
         }
     },[linkFromUrl , userData])
 
+    function RenderSigninError(){
+        if(emailSinginErrorType !== ''){
+            return <p className="pl-2 text-danger text-[14px]">Email or password invalid.</p>
+        }else{
+            return<></>
+        }
+
+    }
+
     async function handleLogin(e:any) {
         e.preventDefault();
         if(emailRef.current && passwordRef.current){
@@ -139,14 +152,14 @@ function LoginSignUp() {
                 await firebase.auth().signInWithEmailAndPassword(emailRef.current?.value , passwordRef.current?.value);
             }
             catch(err:any){
-                console.log(err);
+                setEmailSinginErrorType(err.message);
             }
         }
     }
 
     async function handleSignup(e:any){
         e.preventDefault();
-        setIsEmailSignupError(false);
+        setIsEmailSignupError('');
         setIsPasswordSignupError(false);
         if(signupEmailRef.current && signupPasswordRef.current && signupDisplayName.current){
             try{
@@ -167,8 +180,13 @@ function LoginSignUp() {
                     setUserData(newUser);
                 },600);
             }catch(err:any){
+                console.log(err);
+                
                 if(err?.message === 'The email address is badly formatted.'){
-                    setIsEmailSignupError(true);
+                    setIsEmailSignupError('Invalid email address format.');
+                }
+                if(err?.message === 'The email address is already in use by another account.'){
+                    setIsEmailSignupError(err?.message);
                 }
                 if(err?.message === 'Password should be at least 6 characters'){
                     setIsPasswordSignupError(true);
@@ -241,7 +259,7 @@ function LoginSignUp() {
                                         cookiePolicy={'single_host_origin'}
                                     /> */}
                                 </motion.div>
-                                <motion.div className="flex w-full justify-center items-center mt-16"
+                                <motion.div className="flex flex-col w-full justify-center items-center mt-16 gap-2"
                                     animate={{ opacity: 1 ,  x:0}}
                                     initial={{opacity : 0 ,  x:-500}}
                                     exit ={{ opacity : 0 }}
@@ -250,6 +268,7 @@ function LoginSignUp() {
                                     <button type="submit" className={`w-full md:max-w-[250px] flex justify-center items-center drop-shadow-lg ${isLoading ? 'bg-primary-blue-2 cursor-default' : 'bg-[#334155] hover:bg-[#546c8d] cursor-pointer'} duration-200 ease-in text-white font-semibold py-2 rounded-md`} style={{fontFamily:"'Montserrat', sans-serif"}}>
                                         Sign in
                                     </button>
+                                    {RenderSigninError()}
                                 </motion.div>
 
                                 <motion.div className="flex w-full justify-center items-center mt-10 gap-3" style={{fontFamily:"'Montserrat', sans-serif"}}
@@ -388,7 +407,7 @@ function LoginSignUp() {
                                 className="w-full flex flex-col items-start"
                             >
                                 <CssTextField required inputRef={signupEmailRef} fullWidth variant="outlined" label="email" size={'small'} style={{ marginTop:'40px'}} InputLabelProps={{ required: false }}/>
-                                {isEmailSignupError && <p className="pl-2 text-danger text-[14px]">Invalid email address format.</p>}
+                                {isEmailSignupError !== '' && <p className="pl-2 text-danger text-[14px]">{isEmailSignupError}</p>}
                             </motion.div>
                             <motion.div
                                 animate={{ opacity: 1 , x:0 }}

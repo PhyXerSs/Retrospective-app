@@ -226,7 +226,7 @@ function Lobby() {
                     </div>
                     <Popover className="flex flex-1 justify-end items-center relative">
                         <Popover.Button className="outline-none" >
-                            <img className="w-14 h-14 rounded-full object-cover" src={userData.profilePicture} alt=""/>
+                            <img className="w-14 h-14 rounded-full object-cover" src={userData.profilePicture} referrerPolicy="no-referrer" alt=""/>
                         </Popover.Button>
                         <Transition
                             enter="transition duration-100 ease-out"
