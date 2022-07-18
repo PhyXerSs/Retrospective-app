@@ -234,7 +234,8 @@ function UserInRoom({autoGetUrlRoomImage , setIsShareClick}:{autoGetUrlRoomImage
                                                     }
                                                 }}
                                                 >
-                                                    <div className="w-[36px] h-[36px] relative rounded-full ring-2 ring-white" style={{ backgroundImage:`url(${user?.profilePicture})` , backgroundRepeat:'no-repeat' , backgroundPosition:'center' , backgroundSize:'cover'}}>
+                                                    <div className="w-[36px] h-[36px] relative rounded-full ring-2 ring-white">
+                                                        <img src={user?.profilePicture} alt="" className="rounded-full w-full h-full object-cover" referrerPolicy="no-referrer" />
                                                         <div className={`absolute bottom-[2px] -right-[2px] rounded-full ring-1 ring-white w-[9px] h-[9px] ${user?.isOnline ? 'bg-[#3ee144]' : 'bg-[#e0e0e0]'}`}></div>
                                                     </div>
                                                     <p className="w-[180px] overflow-x-clip whitespace-nowrap">{user?.name}</p>
