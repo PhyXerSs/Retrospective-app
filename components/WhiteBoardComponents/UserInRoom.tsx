@@ -122,7 +122,8 @@ function UserInRoom({autoGetUrlRoomImage , setIsShareClick}:{autoGetUrlRoomImage
             if(count < 2 && sortuserInRoom[i]?.userId !== userData.userId ){
                 count += 1;
                 renderResult.push(
-                    <div key={`userBadge${sortuserInRoom[i]?.userId}`} className="w-[45px] h-[45px] absolute rounded-full ring-2 ring-white" style={{ right:rightOffset , backgroundImage:`url(${sortuserInRoom[i]?.profilePicture})` , backgroundRepeat:'no-repeat' , backgroundPosition:'center' , backgroundSize:'cover'}}>
+                    <div key={`userBadge${sortuserInRoom[i]?.userId}`} className="w-[45px] h-[45px] absolute rounded-full ring-2 ring-white" style={{ right:rightOffset}}>
+                        <img src={sortuserInRoom[i]?.profilePicture} alt="" className="rounded-full w-full h-full object-cover" referrerPolicy="no-referrer" />
                         <div className={`absolute bottom-1 right-0 rounded-full ring-1 ring-white w-[9px] h-[9px] ${sortuserInRoom[i]?.isOnline ? 'bg-[#3ee144]' : 'bg-[#e0e0e0]'}`}></div>
                     </div>
                 );
@@ -130,7 +131,8 @@ function UserInRoom({autoGetUrlRoomImage , setIsShareClick}:{autoGetUrlRoomImage
             }
         }
         renderResult.push(
-            <div key={`userBadge${userData.userId}`} className="w-[45px] h-[45px] absolute rounded-full ring-2 ring-white" style={{right:rightOffset , backgroundImage:`url(${userData.profilePicture})` , backgroundRepeat:'no-repeat' , backgroundPosition:'center' , backgroundSize:'cover'}}>
+            <div key={`userBadge${userData.userId}`} className="w-[45px] h-[45px] absolute rounded-full ring-2 ring-white" style={{right:rightOffset}}>
+                <img src={userData.profilePicture} alt="" className="rounded-full w-full h-full object-cover" referrerPolicy="no-referrer" />
                 <div className={`absolute bottom-1 right-0 rounded-full ring-1 ring-white w-[9px] h-[9px] bg-[#3ee144]`}></div>
             </div>
         )
