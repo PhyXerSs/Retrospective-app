@@ -1,7 +1,7 @@
 import firebase from 'firebase';
 const firebaseConfig = {
   apiKey: "AIzaSyAgKnX8BZIqvllnHRWhH7AnmZn08-tma3c",
-  authDomain: "retrospective-connectx.firebaseapp.com",
+  authDomain: "retrospective-app.vercel.app",
   databaseURL: "https://retrospective-connectx-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "retrospective-connectx",
   storageBucket: "retrospective-connectx.appspot.com",
