@@ -10,6 +10,26 @@ import TextDecreaseIcon from '@mui/icons-material/TextDecrease';
 import TextIncreaseIcon from '@mui/icons-material/TextIncrease';
 import firebase from '../../firebase/firebase-config';
 import useImage from 'use-image';
+import RectangularPostIt from './WhiteboardToolComponent/RectangularPostIt';
+import CircularPostIt from './WhiteboardToolComponent/CircularPostIt';
+import ImageObject from './WhiteboardToolComponent/ImageObject';
+import Octagon from './WhiteboardToolComponent/Octagon';
+import Pentagon from './WhiteboardToolComponent/Pentagon';
+import Hexagon from './WhiteboardToolComponent/Hexagon';
+import StarFive from './WhiteboardToolComponent/StarFive';
+import StarSeven from './WhiteboardToolComponent/StarSeven';
+import StarFour from './WhiteboardToolComponent/StarFour';
+import RectangularShape from './WhiteboardToolComponent/RectangularShape';
+import TriangleShape from './WhiteboardToolComponent/TriangleShape';
+import StarFourTriple from './WhiteboardToolComponent/StarFourTriple';
+import HexagonHorizontal from './WhiteboardToolComponent/HexagonHorizontal';
+import TextField from './WhiteboardToolComponent/TextField';
+import Heart from './WhiteboardToolComponent/StampObject/Heart';
+import Like from './WhiteboardToolComponent/StampObject/Like';
+import Dislike from './WhiteboardToolComponent/StampObject/Dislike';
+import Clap from './WhiteboardToolComponent/StampObject/Clap';
+import TwoFinger from './WhiteboardToolComponent/StampObject/TwoFinger';
+import Bye from './WhiteboardToolComponent/StampObject/Bye';
 function ModalPostIt({ rect, userData, isSelected, onSelect, onChange , handleDragStart , handleDragEnd , handleDragMove , handleTransformChange , handleTextChange , stroke , isYourSelect , showTextArea , setShowTextArea , handleFontSizeChange}:{rect:RectStateType , userData:whiteBoardUserDataStateType , isSelected:boolean , onSelect:any , onChange:any , handleDragStart:any , handleDragEnd:any , handleDragMove :any , handleTransformChange:any , handleTextChange:any , stroke:string , isYourSelect:boolean , showTextArea:boolean , setShowTextArea:any , handleFontSizeChange:any}) {
     const rectRef = useRef<any>(null);
     const circleRef = useRef<any>(null);
@@ -102,15 +122,6 @@ function ModalPostIt({ rect, userData, isSelected, onSelect, onChange , handleDr
       }else if(type === 'Try'){
         return '#FFD966'
       }
-      
-      // if(rect.type === 'pros'){
-      //   return '#ffc4e6'
-      // }else if(rect.type === 'cons'){
-      //   return '#9cebfd'
-      // }else{
-      //   return '#f9fe89'
-      // }
-
     }
 
 
@@ -242,1158 +253,102 @@ function ModalPostIt({ rect, userData, isSelected, onSelect, onChange , handleDr
     function renderShapeModel(model:string){
       if(model === 'rectangular'){
         return (
-          <>
-            <Rect
-              ref={rectRef}
-              width={100}
-              height={100}
-              fill={convertTypeToColorRect(rect.type)}
-              strokeWidth={1}
-              stroke={stroke}
-              scaleX={rect.scaleX}
-              scaleY={rect.scaleY}
-              rotation={rect.rotation}
-              x={rect.positionWordX}
-              y={rect.positionWordY}
-              shadowOpacity={0.3}
-              shadowBlur={2}
-              perfectDrawEnabled={false}
-              onTransform={(e:any)=>{
-                const node = rectRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x();
-                let positionBoxY = node.y();
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-              onTransformEnd={(e) => {    
-                const node = rectRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x();
-                let positionBoxY = node.y();
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-
-            />
-              <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY , scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:100 , height:100}} divProps={{ style: { opacity:1} }}>
-                <div className={`flex justify-center items-center ${isSelected && showTextArea ? 'w-[100px]' : 'w-0'} h-[100px] p-[5]`}>
-                  <textarea
-                    ref={textAreaRef}
-                    onChange={(e:any)=>{
-                      if(textAreaRef.current){
-                        handleTextChange(textAreaRef.current.value , rect.rectId)
-                      }
-                    }}
-                    style={{
-                      resize:'none',
-                      background: 'none',
-                      outline: "none",
-                      width: isSelected && showTextArea ? 90 : 0,
-                      height: 90,
-                      fontSize:rect.adaptiveFontSize,
-                    }}
-                  />
-                </div>
-              </Html>
-              <Text
-                text={rect.message}
-                scaleX={rect.scaleX}
-                scaleY={rect.scaleY}
-                rotation={rect.rotation}
-                x={rect.positionWordX}
-                y={rect.positionWordY}
-                width={isSelected && showTextArea ? 0 : 100}
-                height={100}
-                align="center"
-                verticalAlign="middle"
-                fontSize={rect.adaptiveFontSize}
-                perfectDrawEnabled={false}
-                onDblClick={()=>{
-                  setShowTextArea(true)
-                }}
-                padding={5}
-              />
-              <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY , scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:100 , height:100}} divProps={{ style: { opacity:1 } }}>
-                <div className="flex justify-center gap-1 absolute top-[105px] left-[50px]">
-                  {/* <img className="w-5 rounded-full"  src={rect.selectedByProfilePicture} alt=""/> */}
-                  <p className={`${rect.selectedByUserId !== '-' ? 'flex' : 'hidden'}  px-[12px] ${isYourSelect ? 'bg-[#1363df]' :'bg-[#ff355f]'} rounded-full text-white text-[12px] drop-shadow-md whitespace-nowrap`}>
-                    {rect.selectedByUsername}
-                  </p>
-                </div>
-              </Html>
-              {isSelected &&
-              <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY , scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation , width:100 , height:100}} divProps={{ style: { opacity:1 } }}>
-                <div className="absolute -top-[45px] left-[65px] p-1 flex items-center gap-1 bg-[#fafafa] rounded-lg drop-shadow-md">
-                    <div className='flex items-center justify-center w-7 h-7 hover:bg-[#e2e2e2] rounded-lg cursor-pointer ease-in duration-200'
-                      onClick={async()=>{
-                        handleFontSizeChange('decrease' , rect.adaptiveFontSize , rect.rectId);
-                      }}
-                    >
-                      <TextDecreaseIcon style={{fontSize:'12px'}} />
-                    </div>
-                    <div className='flex items-center justify-center w-7 h-7 hover:bg-[#e2e2e2] rounded-lg cursor-pointer ease-in duration-200'
-                      onClick={async()=>{
-                        handleFontSizeChange('increase', rect.adaptiveFontSize, rect.rectId);
-                      }}
-                    >
-                      <TextIncreaseIcon style={{fontSize:'16px'}} />
-                    </div>
-                </div>
-              </Html>}
-          </>
+          RectangularPostIt(rectRef, convertTypeToColorRect, rect, stroke, handleTransformChange, isSelected, showTextArea, textAreaRef, handleTextChange, setShowTextArea, isYourSelect, handleFontSizeChange)
         );
       }
       else if(model === 'circle'){
         return(
-          <>
-              <Circle
-                ref={circleRef}
-                radius={60}
-                fill={convertTypeToColorRect(rect.type)}
-                strokeWidth={1}
-                stroke={stroke}
-                scaleX={rect.scaleX}
-                scaleY={rect.scaleY}
-                rotation={rect.rotation}
-                x={rect.positionWordX}
-                y={rect.positionWordY}
-                offsetX={-50}
-                offsetY={-50}
-                shadowOpacity={0.2}
-                shadowBlur={3}
-                perfectDrawEnabled={false}
-                onTransform={(e:any)=>{
-                  const node = circleRef.current;
-                  const scaleX = node.scaleX();
-                  const scaleY = node.scaleY();
-                  const rotation = node.rotation();
-                  let positionBoxX = node.x();
-                  let positionBoxY = node.y();
-                  handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-                }}
-                onTransformEnd={(e:any) => {    
-                  const node = circleRef.current;
-                  const scaleX = node.scaleX();
-                  const scaleY = node.scaleY();
-                  const rotation = node.rotation();
-                  let positionBoxX = node.x();
-                  let positionBoxY = node.y();
-                  handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-                }}
-
-              />
-              <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY , scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:100 , height:100}} divProps={{ style: { opacity:1} }}>
-                <div className={`flex justify-center items-center ${isSelected && showTextArea ? 'w-[100px]' : 'w-0'} h-[100px] p-[5]`}>
-                  <textarea
-                    ref={textAreaRef}
-                    onChange={(e:any)=>{
-                      if(textAreaRef.current){
-                        handleTextChange(textAreaRef.current.value , rect.rectId)
-                      }
-                    }}
-                    style={{
-                      resize:'none',
-                      background: 'none',
-                      outline: "none",
-                      width: isSelected && showTextArea ? 90 : 0,
-                      height: 90,
-                      fontSize:rect.adaptiveFontSize,
-                    }}
-                  />
-                </div>
-              </Html>
-              <Text
-                text={rect.message}
-                scaleX={rect.scaleX}
-                scaleY={rect.scaleY}
-                rotation={rect.rotation}
-                x={rect.positionWordX}
-                y={rect.positionWordY}
-                width={isSelected && showTextArea ? 0 : 100}
-                height={100}
-                align="center"
-                verticalAlign="middle"
-                fontSize={rect.adaptiveFontSize}
-                perfectDrawEnabled={false}
-                onDblClick={()=>{
-                  setShowTextArea(true)
-                }}
-                padding={5}
-              />
-              <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY , scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:100 , height:100}} divProps={{ style: { opacity:1 } }}>
-                <div className="flex justify-center gap-1 absolute top-[115px] left-[50px]">
-                    {/* <img className="w-5 rounded-full"  src={rect.selectedByProfilePicture} alt=""/> */}
-                  <p className={`${rect.selectedByUserId !== '-' ? 'flex' : 'hidden'} px-[12px] ${isYourSelect ? 'bg-[#1363df]' :'bg-[#ff355f]'} rounded-full text-white text-[12px] drop-shadow-md whitespace-nowrap`}>
-                    {rect.selectedByUsername}
-                  </p>
-                </div>
-              </Html>
-              {isSelected &&
-              <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY , rotation:rect.rotation , scaleX:rect.scaleX , scaleY:rect.scaleY , width:100 , height:100}} divProps={{ style: { opacity:1 } }}>
-                <div className="absolute -top-[60px] left-[65px] p-1 flex items-center gap-1 bg-[#fafafa] rounded-lg drop-shadow-md">
-                    <div className='flex items-center justify-center w-7 h-7 hover:bg-[#e2e2e2] rounded-lg cursor-pointer ease-in duration-200'
-                      onClick={async()=>{
-                        handleFontSizeChange('decrease' , rect.adaptiveFontSize , rect.rectId);
-                      }}
-                    >
-                      <TextDecreaseIcon style={{fontSize:'12px'}} />
-                    </div>
-                    <div className='flex items-center justify-center w-7 h-7 hover:bg-[#e2e2e2] rounded-lg cursor-pointer ease-in duration-200'
-                      onClick={()=>{
-                        handleFontSizeChange('increase', rect.adaptiveFontSize , rect.rectId);
-                      }}
-                    >
-                      <TextIncreaseIcon style={{fontSize:'16px'}} />
-                    </div>
-                </div>
-              </Html>
-              }
-            </>
+          CircularPostIt(circleRef, convertTypeToColorRect, rect, stroke, handleTransformChange, isSelected, showTextArea, textAreaRef, handleTextChange, setShowTextArea, isYourSelect, handleFontSizeChange)
         );
       }
       else if(model === 'image'){
         return (
-          <>
-            <Image
-              key={rect.rectId}
-              id={rect.rectId}
-              ref={imageRef}
-              image={image}
-              strokeWidth={3}
-              stroke={stroke}
-              scaleX={rect.scaleX}
-              scaleY={rect.scaleY}
-              width={image?.width}
-              height={image?.height}
-              rotation={rect.rotation}
-              x={rect.positionWordX}
-              y={rect.positionWordY}
-              shadowOpacity={0.2}
-              shadowBlur={6}
-              perfectDrawEnabled={false}
-              onTransform={(e:any)=>{
-                const node = imageRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x();
-                let positionBoxY = node.y();
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-              onTransformEnd={(e) => {    
-                const node = imageRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x();
-                let positionBoxY = node.y();
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-  
-            />
-            {/* <Image
-              x={rect.positionWordX }
-              y={rect.positionWordY}
-              image={userImage}
-              width={50}
-              height={50}
-              scaleX={rect.scaleX}
-              scaleY={rect.scaleY}
-              rotation={rect.rotation}
-              offsetX={image?.width === undefined ? 0 : getOffsetXProfileImage(image.width ,image.height)}
-              offsetY={image?.height === undefined ? 0 : getOffsetYProfileImage(image.width ,image.height)}
-            /> */}
-            
-              <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY, scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:100 , height:100}} divProps={{ style: { opacity:1 } }}>
-              <p className={`${rect.selectedByUserId !== '-' ? 'flex' : 'hidden'} absolute ${isYourSelect ? 'bg-[#1363df]' :'bg-[#ff355f]'} rounded-full text-white drop-shadow-md whitespace-nowrap items-center`}
-                  style={{top:getTopOffsetImage() , left:getLeftOffsetImage() , fontSize:getFontSizeSelectPlate() , paddingLeft:getFontSizeSelectPlate() , paddingRight:getFontSizeSelectPlate()}}
-                >
-                  {rect.selectedByUsername}
-                </p>
-              </Html>
-          </>
+          ImageObject(rect, imageRef, image, stroke, handleTransformChange, isYourSelect, getTopOffsetImage, getLeftOffsetImage, getFontSizeSelectPlate)
         );
       }
       else if(model === 'octagon'){
         return(
-          <>
-            <RegularPolygon
-                ref={regularRef}
-                sides={8}
-                radius={50}
-                fill={'transparent'}
-                strokeWidth={1}
-                stroke={stroke === '#ff355f' ? '#ff355f' : 'black'}
-                scaleX={rect.scaleX}
-                scaleY={rect.scaleY}
-                rotation={rect.rotation}
-                x={rect.positionWordX}
-                y={rect.positionWordY}
-                offsetX={-50}
-                offsetY={-50}
-                shadowOpacity={0.2}
-                shadowBlur={3}
-                perfectDrawEnabled={false}
-                onTransform={(e:any)=>{
-                  const node = regularRef.current;
-                  const scaleX = node.scaleX();
-                  const scaleY = node.scaleY();
-                  const rotation = node.rotation();
-                  let positionBoxX = node.x();
-                  let positionBoxY = node.y();
-                  handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-                }}
-                onTransformEnd={(e:any) => {    
-                  const node = regularRef.current;
-                  const scaleX = node.scaleX();
-                  const scaleY = node.scaleY();
-                  const rotation = node.rotation();
-                  let positionBoxX = node.x();
-                  let positionBoxY = node.y();
-                  handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-                }}
-            />
-            <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY , scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:100 , height:100}} divProps={{ style: { opacity:1 } }}>
-                <p className={`${rect.selectedByUserId !== '-' ? 'flex' : 'hidden'} absolute top-[110px] left-[50px] px-[12px] ${isYourSelect ? 'bg-[#1363df]' :'bg-[#ff355f]'} rounded-full text-white text-[12px] drop-shadow-md whitespace-nowrap`}>
-                  {rect.selectedByUsername}
-                </p>
-            </Html>
-          </>
+          Octagon(regularRef, stroke, rect, handleTransformChange, isYourSelect)
         );
       }
       else if(model === 'pentagon'){
         return(
-          <>
-            <RegularPolygon
-                ref={regularRef}
-                sides={5}
-                radius={50}
-                fill={'transparent'}
-                strokeWidth={1}
-                stroke={stroke === '#ff355f' ? '#ff355f' : 'black'}
-                scaleX={rect.scaleX}
-                scaleY={rect.scaleY}
-                rotation={rect.rotation}
-                x={rect.positionWordX}
-                y={rect.positionWordY}
-                offsetX={-50}
-                offsetY={-50}
-                shadowOpacity={0.2}
-                shadowBlur={3}
-                perfectDrawEnabled={false}
-                onTransform={(e:any)=>{
-                  const node = regularRef.current;
-                  const scaleX = node.scaleX();
-                  const scaleY = node.scaleY();
-                  const rotation = node.rotation();
-                  let positionBoxX = node.x();
-                  let positionBoxY = node.y();
-                  handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-                }}
-                onTransformEnd={(e:any) => {    
-                  const node = regularRef.current;
-                  const scaleX = node.scaleX();
-                  const scaleY = node.scaleY();
-                  const rotation = node.rotation();
-                  let positionBoxX = node.x();
-                  let positionBoxY = node.y();
-                  handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-                }}
-            />
-            <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY , scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:100 , height:100}} divProps={{ style: { opacity:1 } }}>
-                <p className={`${rect.selectedByUserId !== '-' ? 'flex' : 'hidden'} absolute top-[100px] left-[50px] px-[12px] ${isYourSelect ? 'bg-[#1363df]' :'bg-[#ff355f]'} rounded-full text-white text-[12px] drop-shadow-md whitespace-nowrap`}>
-                  {rect.selectedByUsername}
-                </p>
-            </Html>
-          </>
+          Pentagon(regularRef, stroke, rect, handleTransformChange, isYourSelect)
         );
       }
       else if(model === 'hexagon'){
         return(
-          <>
-            <RegularPolygon
-                ref={regularRef}
-                sides={6}
-                radius={50}
-                fill={'transparent'}
-                strokeWidth={1}
-                stroke={stroke === '#ff355f' ? '#ff355f' : 'black'}
-                scaleX={rect.scaleX}
-                scaleY={rect.scaleY}
-                rotation={rect.rotation}
-                x={rect.positionWordX}
-                y={rect.positionWordY}
-                offsetX={-50}
-                offsetY={-50}
-                shadowOpacity={0.2}
-                shadowBlur={3}
-                perfectDrawEnabled={false}
-                onTransform={(e:any)=>{
-                  const node = regularRef.current;
-                  const scaleX = node.scaleX();
-                  const scaleY = node.scaleY();
-                  const rotation = node.rotation();
-                  let positionBoxX = node.x();
-                  let positionBoxY = node.y();
-                  handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-                }}
-                onTransformEnd={(e:any) => {    
-                  const node = regularRef.current;
-                  const scaleX = node.scaleX();
-                  const scaleY = node.scaleY();
-                  const rotation = node.rotation();
-                  let positionBoxX = node.x();
-                  let positionBoxY = node.y();
-                  handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-                }}
-            />
-            <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY , scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:100 , height:100}} divProps={{ style: { opacity:1 } }}>
-                <p className={`${rect.selectedByUserId !== '-' ? 'flex' : 'hidden'} absolute top-[110px] left-[50px] px-[12px] ${isYourSelect ? 'bg-[#1363df]' :'bg-[#ff355f]'} rounded-full text-white text-[12px] drop-shadow-md whitespace-nowrap`}>
-                  {rect.selectedByUsername}
-                </p>
-            </Html>
-          </>
+          Hexagon(regularRef, stroke, rect, handleTransformChange, isYourSelect)
         );
       }
       else if(model === 'star'){
         return(
-          <>
-            <Star
-                ref={regularRef}
-                width={100}
-                height={100}
-                numPoints={5}
-                innerRadius={30}		
-                outerRadius={70}
-                fill={'transparent'}
-                strokeWidth={1}
-                stroke={stroke === '#ff355f' ? '#ff355f' : 'black'}
-                scaleX={rect.scaleX}
-                scaleY={rect.scaleY}
-                rotation={rect.rotation}
-                x={rect.positionWordX}
-                y={rect.positionWordY}
-                offsetX={-50}
-                offsetY={-50}
-                shadowOpacity={0.2}
-                shadowBlur={3}
-                perfectDrawEnabled={false}
-                onTransform={(e:any)=>{
-                  const node = regularRef.current;
-                  const scaleX = node.scaleX();
-                  const scaleY = node.scaleY();
-                  const rotation = node.rotation();
-                  let positionBoxX = node.x();
-                  let positionBoxY = node.y();
-                  handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-                }}
-                onTransformEnd={(e:any) => {    
-                  const node = regularRef.current;
-                  const scaleX = node.scaleX();
-                  const scaleY = node.scaleY();
-                  const rotation = node.rotation();
-                  let positionBoxX = node.x();
-                  let positionBoxY = node.y();
-                  handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-                }}
-            />
-            <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY , scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:100 , height:100}} divProps={{ style: { opacity:1 } }}>
-                <p className={`${rect.selectedByUserId !== '-' ? 'flex' : 'hidden'} absolute top-[130px] left-[50px] px-[12px] ${isYourSelect ? 'bg-[#1363df]' :'bg-[#ff355f]'} rounded-full text-white text-[12px] drop-shadow-md whitespace-nowrap`}>
-                  {rect.selectedByUsername}
-                </p>
-            </Html>
-          </>
+          StarFive(regularRef, stroke, rect, handleTransformChange, isYourSelect)
         );
       }
       else if(model === 'starSeven'){
         return(
-          <>
-            <Star
-                ref={regularRef}
-                width={100}
-                height={100}
-                numPoints={7}
-                innerRadius={37}		
-                outerRadius={60}
-                fill={'transparent'}
-                strokeWidth={1}
-                stroke={stroke === '#ff355f' ? '#ff355f' : 'black'}
-                scaleX={rect.scaleX}
-                scaleY={rect.scaleY}
-                rotation={rect.rotation}
-                x={rect.positionWordX}
-                y={rect.positionWordY}
-                offsetX={-50}
-                offsetY={-50}
-                shadowOpacity={0.2}
-                shadowBlur={3}
-                perfectDrawEnabled={false}
-                onTransform={(e:any)=>{
-                  const node = regularRef.current;
-                  const scaleX = node.scaleX();
-                  const scaleY = node.scaleY();
-                  const rotation = node.rotation();
-                  let positionBoxX = node.x();
-                  let positionBoxY = node.y();
-                  handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-                }}
-                onTransformEnd={(e:any) => {    
-                  const node = regularRef.current;
-                  const scaleX = node.scaleX();
-                  const scaleY = node.scaleY();
-                  const rotation = node.rotation();
-                  let positionBoxX = node.x();
-                  let positionBoxY = node.y();
-                  handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-                }}
-            />
-            <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY , scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:100 , height:100}} divProps={{ style: { opacity:1 } }}>
-                <p className={`${rect.selectedByUserId !== '-' ? 'flex' : 'hidden'} absolute top-[120px] left-[50px] px-[12px] ${isYourSelect ? 'bg-[#1363df]' :'bg-[#ff355f]'} rounded-full text-white text-[12px] drop-shadow-md whitespace-nowrap`}>
-                  {rect.selectedByUsername}
-                </p>
-            </Html>
-          </>
+          StarSeven(regularRef, stroke, rect, handleTransformChange, isYourSelect)
         );
       }
       else if(model === 'starFour'){
         return(
-          <>
-            <Star
-                ref={regularRef}
-                width={100}
-                height={100}
-                numPoints={4}
-                innerRadius={18}		
-                outerRadius={60}
-                fill={'transparent'}
-                strokeWidth={1}
-                stroke={stroke === '#ff355f' ? '#ff355f' : 'black'}
-                scaleX={rect.scaleX}
-                scaleY={rect.scaleY}
-                rotation={rect.rotation}
-                x={rect.positionWordX}
-                y={rect.positionWordY}
-                offsetX={-50}
-                offsetY={-50}
-                shadowOpacity={0.2}
-                shadowBlur={3}
-                perfectDrawEnabled={false}
-                onTransform={(e:any)=>{
-                  const node = regularRef.current;
-                  const scaleX = node.scaleX();
-                  const scaleY = node.scaleY();
-                  const rotation = node.rotation();
-                  let positionBoxX = node.x();
-                  let positionBoxY = node.y();
-                  handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-                }}
-                onTransformEnd={(e:any) => {    
-                  const node = regularRef.current;
-                  const scaleX = node.scaleX();
-                  const scaleY = node.scaleY();
-                  const rotation = node.rotation();
-                  let positionBoxX = node.x();
-                  let positionBoxY = node.y();
-                  handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-                }}
-            />
-            <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY , scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:100 , height:100}} divProps={{ style: { opacity:1 } }}>
-                <p className={`${rect.selectedByUserId !== '-' ? 'flex' : 'hidden'} absolute top-[120px] left-[50px] px-[12px] ${isYourSelect ? 'bg-[#1363df]' :'bg-[#ff355f]'} rounded-full text-white text-[12px] drop-shadow-md whitespace-nowrap`}>
-                  {rect.selectedByUsername}
-                </p>
-            </Html>
-          </>
+          StarFour(regularRef, stroke, rect, handleTransformChange, isYourSelect)
         );
       }
       else if(model === 'rectangularShape'){
         return(
-          <>
-            <Rect
-              ref={rectRef}
-              width={100}
-              height={100}
-              fill={'transparent'}
-              strokeWidth={1}
-              stroke={stroke === '#ff355f' ? '#ff355f' : 'black'}
-              scaleX={rect.scaleX}
-              scaleY={rect.scaleY}
-              rotation={rect.rotation}
-              x={rect.positionWordX}
-              y={rect.positionWordY}
-              shadowOpacity={0.2}
-              shadowBlur={3}
-              cornerRadius={15}
-              perfectDrawEnabled={false}
-              onTransform={(e:any)=>{
-                const node = rectRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x();
-                let positionBoxY = node.y();
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-              onTransformEnd={(e) => {    
-                const node = rectRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x();
-                let positionBoxY = node.y();
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-            />
-            <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY , scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:100 , height:100}} divProps={{ style: { opacity:1 } }}>
-                <p className={`${rect.selectedByUserId !== '-' ? 'flex' : 'hidden'} absolute top-[110px] left-[50px] px-[12px] ${isYourSelect ? 'bg-[#1363df]' :'bg-[#ff355f]'} rounded-full text-white text-[12px] drop-shadow-md whitespace-nowrap`}>
-                  {rect.selectedByUsername}
-                </p>
-            </Html>
-          </>
+          RectangularShape(rectRef, stroke, rect, handleTransformChange, isYourSelect)
         );
       }
       else if(model === 'triangle'){
         return(
-          <>
-            <RegularPolygon
-                ref={regularRef}
-                sides={3}
-                radius={50}
-                fill={'transparent'}
-                strokeWidth={1}
-                stroke={stroke === '#ff355f' ? '#ff355f' : 'black'}
-                scaleX={rect.scaleX}
-                scaleY={rect.scaleY}
-                rotation={rect.rotation}
-                x={rect.positionWordX}
-                y={rect.positionWordY}
-                offsetX={-50}
-                offsetY={-50}
-                shadowOpacity={0.2}
-                shadowBlur={3}
-                perfectDrawEnabled={false}
-                onTransform={(e:any)=>{
-                  const node = regularRef.current;
-                  const scaleX = node.scaleX();
-                  const scaleY = node.scaleY();
-                  const rotation = node.rotation();
-                  let positionBoxX = node.x();
-                  let positionBoxY = node.y();
-                  handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-                }}
-                onTransformEnd={(e:any) => {    
-                  const node = regularRef.current;
-                  const scaleX = node.scaleX();
-                  const scaleY = node.scaleY();
-                  const rotation = node.rotation();
-                  let positionBoxX = node.x();
-                  let positionBoxY = node.y();
-                  handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-                }}
-            />
-            <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY , scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:100 , height:100}} divProps={{ style: { opacity:1 } }}>
-                <p className={`${rect.selectedByUserId !== '-' ? 'flex' : 'hidden'} absolute top-[85px] left-[50px] px-[12px] ${isYourSelect ? 'bg-[#1363df]' :'bg-[#ff355f]'} rounded-full text-white text-[12px] drop-shadow-md whitespace-nowrap`}>
-                  {rect.selectedByUsername}
-                </p>
-            </Html>
-          </>
+          TriangleShape(regularRef, stroke, rect, handleTransformChange, isYourSelect)
         );
       }
       else if(model === 'starFourTriple'){
         return(
-          <>
-            <Image
-              key={rect.rectId}
-              id={rect.rectId}
-              ref={imageRef}
-              image={starFourTripleImage}
-              strokeWidth={1}
-              stroke={stroke}
-              scaleX={rect.scaleX}
-              scaleY={rect.scaleY}
-              width={100}
-              height={100}
-              rotation={rect.rotation}
-              x={rect.positionWordX}
-              y={rect.positionWordY}
-              shadowOpacity={0.2}
-              shadowBlur={6}
-              perfectDrawEnabled={false}
-              onTransform={(e:any)=>{
-                const node = imageRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x();
-                let positionBoxY = node.y();
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-              onTransformEnd={(e) => {    
-                const node = imageRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x();
-                let positionBoxY = node.y();
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-  
-            />
-              <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY, scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:100 , height:100}} divProps={{ style: { opacity:1 } }}>
-                <p className={`${rect.selectedByUserId !== '-' ? 'flex' : 'hidden'} absolute top-[105px] left-[50px] px-[12px] ${isYourSelect ? 'bg-[#1363df]' :'bg-[#ff355f]'} rounded-full text-white text-[12px] drop-shadow-md whitespace-nowrap`}>
-                  {rect.selectedByUsername}
-                </p>
-              </Html>
-          </>
+          StarFourTriple(rect, imageRef, starFourTripleImage, stroke, handleTransformChange, isYourSelect)
         );
       }
       else if(model === 'hexagonHorizontal'){
         return(
-          <>
-            <Image
-              key={rect.rectId}
-              id={rect.rectId}
-              ref={imageRef}
-              image={hexagonHorizontal}
-              strokeWidth={1}
-              stroke={stroke}
-              scaleX={rect.scaleX}
-              scaleY={rect.scaleY}
-              width={100}
-              height={100}
-              rotation={rect.rotation}
-              x={rect.positionWordX}
-              y={rect.positionWordY}
-              shadowOpacity={0.2}
-              shadowBlur={6}
-              perfectDrawEnabled={false}
-              onTransform={(e:any)=>{
-                const node = imageRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x();
-                let positionBoxY = node.y();
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-              onTransformEnd={(e) => {    
-                const node = imageRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x();
-                let positionBoxY = node.y();
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-  
-            />
-              <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY, scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:100 , height:100}} divProps={{ style: { opacity:1 } }}>
-                <p className={`${rect.selectedByUserId !== '-' ? 'flex' : 'hidden'} absolute top-[105px] left-[50px] px-[12px] ${isYourSelect ? 'bg-[#1363df]' :'bg-[#ff355f]'} rounded-full text-white text-[12px] drop-shadow-md whitespace-nowrap`}>
-                  {rect.selectedByUsername}
-                </p>
-              </Html>
-          </>
+          HexagonHorizontal(rect, imageRef, hexagonHorizontal, stroke, handleTransformChange, isYourSelect)
         );
       }
       else if(model === 'textfield'){
         return(
-          <>
-            <Rect
-              ref={rectRef}
-              width={200}
-              height={60}
-              fill={'transparent'}
-              strokeWidth={1}
-              stroke={stroke}
-              scaleX={rect.scaleX}
-              scaleY={rect.scaleY}
-              rotation={rect.rotation}
-              x={rect.positionWordX}
-              y={rect.positionWordY}
-              shadowOpacity={0.2}
-              shadowBlur={3}
-              perfectDrawEnabled={false}
-              onTransform={(e:any)=>{
-                const node = rectRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x();
-                let positionBoxY = node.y();
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-              onTransformEnd={(e) => {    
-                const node = rectRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x();
-                let positionBoxY = node.y();
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-
-            />
-              <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY , scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:200 , height:60}} divProps={{ style: { opacity:1} }}>
-                <div className={`flex justify-center items-center ${isSelected && showTextArea ? 'w-[200px]' : 'w-0'} h-[60px]`}>
-                  <textarea
-                    ref={textAreaRef}
-                    onChange={(e:any)=>{
-                      if(textAreaRef.current){
-                        handleTextChange(textAreaRef.current.value , rect.rectId)
-                      }
-                    }}
-                    style={{
-                      resize:'none',
-                      background: 'none',
-                      outline: "none",
-                      width: isSelected && showTextArea ? 200 : 0,
-                      height: 60,
-                      fontSize:5+rect.adaptiveFontSize,
-                      lineHeight:'17px'
-                    }}
-                  />
-                </div>
-              </Html>
-              <Text
-                text={rect.message === '' ? 'This is a textbox...' : rect.message}
-                scaleX={rect.scaleX}
-                scaleY={rect.scaleY}
-                rotation={rect.rotation}
-                x={rect.positionWordX}
-                y={rect.positionWordY}
-                width={isSelected && showTextArea ? 0 : 200}
-                height={60}
-                fontSize={5+rect.adaptiveFontSize}
-                perfectDrawEnabled={false}
-                onDblClick={()=>{
-                  setShowTextArea(true)
-                }}
-                padding={2}
-              />
-              <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY , scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:200 , height:60}} divProps={{ style: { opacity:1 } }}>
-                <p className={`${rect.selectedByUserId !== '-' ? 'flex' : 'hidden'} absolute top-[65px] left-[140px] px-[12px] ${isYourSelect ? 'bg-[#1363df]' :'bg-[#ff355f]'} rounded-full text-white text-[12px] drop-shadow-md whitespace-nowrap`}>
-                  {rect.selectedByUsername}
-                </p>
-              </Html>
-              {isSelected &&
-              <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY , scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation , width:200 , height:60}} divProps={{ style: { opacity:1 } }}>
-                <div className="absolute -top-[45px] left-[132px] p-1 flex items-center gap-1 bg-[#fafafa] rounded-lg drop-shadow-md">
-                    <div className='flex items-center justify-center w-7 h-7 hover:bg-[#e2e2e2] rounded-lg cursor-pointer ease-in duration-200'
-                      onClick={async()=>{
-                        handleFontSizeChange('decrease' , rect.adaptiveFontSize , rect.rectId);
-                      }}
-                    >
-                      <TextDecreaseIcon style={{fontSize:'12px'}} />
-                    </div>
-                    <div className='flex items-center justify-center w-7 h-7 hover:bg-[#e2e2e2] rounded-lg cursor-pointer ease-in duration-200'
-                      onClick={async()=>{
-                        handleFontSizeChange('increase' , rect.adaptiveFontSize , rect.rectId);
-                      }}
-                    >
-                      <TextIncreaseIcon style={{fontSize:'16px'}} />
-                    </div>
-                </div>
-              </Html>}
-          </>
+          TextField(rectRef, stroke, rect, handleTransformChange, isSelected, showTextArea, textAreaRef, handleTextChange, setShowTextArea, isYourSelect, handleFontSizeChange)
         );
       }
       else if(model === 'like'){
         return(
-          <>
-            <Image
-              key={rect.rectId}
-              id={rect.rectId}
-              ref={likeImageRef}
-              image={likeImage}
-              strokeWidth={1}
-              stroke={stroke}
-              scaleX={rect.scaleX}
-              scaleY={rect.scaleY}
-              width={120}
-              height={120}
-              rotation={rect.rotation}
-              x={rect.positionWordX}
-              y={rect.positionWordY+50}
-              offsetY={50}
-              shadowOpacity={0.2}
-              shadowBlur={6}
-              perfectDrawEnabled={false}
-              onTransform={(e:any)=>{
-                const node = likeImageRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x();
-                let positionBoxY = node.y()-50;
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-              onTransformEnd={(e) => {    
-                const node = likeImageRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x();
-                let positionBoxY = node.y()-50;
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-  
-            />
-              <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY+50, scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:100 , height:100}} divProps={{ style: { opacity:1 } }}>
-                <p className={`${rect.selectedByUserId !== '-' ? 'flex' : 'hidden'} absolute top-[75px] left-[60px] px-[12px] ${isYourSelect ? 'bg-[#1363df]' :'bg-[#ff355f]'} rounded-full text-white text-[12px] drop-shadow-md whitespace-nowrap`}>
-                  {rect.selectedByUsername}
-                </p>
-              </Html>
-          </>
+          Like(rect, likeImageRef, likeImage, stroke, handleTransformChange, isYourSelect)
         );
       }
       else if(model === 'dislike'){
         return(
-          <>
-            <Image
-              key={rect.rectId}
-              id={rect.rectId}
-              ref={dislikeRef}
-              image={dislike}
-              strokeWidth={1}
-              stroke={stroke}
-              scaleX={rect.scaleX}
-              scaleY={rect.scaleY}
-              width={100}
-              height={100}
-              rotation={rect.rotation}
-              x={rect.positionWordX}
-              y={rect.positionWordY}
-              shadowOpacity={0.2}
-              shadowBlur={6}
-              perfectDrawEnabled={false}
-              onTransform={(e:any)=>{
-                const node = dislikeRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x();
-                let positionBoxY = node.y();
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-              onTransformEnd={(e) => {    
-                const node = dislikeRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x();
-                let positionBoxY = node.y();
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-  
-            />
-              <Html groupProps={{ x:rect.positionWordX , y:rect.positionWordY, scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:100 , height:100}} divProps={{ style: { opacity:1 } }}>
-                <p className={`${rect.selectedByUserId !== '-' ? 'flex' : 'hidden'} absolute top-[105px] left-[50px] px-[12px] ${isYourSelect ? 'bg-[#1363df]' :'bg-[#ff355f]'} rounded-full text-white text-[12px] drop-shadow-md whitespace-nowrap`}>
-                  {rect.selectedByUsername}
-                </p>
-              </Html>
-          </>
+          Dislike(rect, dislikeRef, dislike, stroke, handleTransformChange, isYourSelect)
         );
       }
       else if(model === 'lovelove'){
         return(
-          <>
-            <Image
-              key={rect.rectId}
-              id={rect.rectId}
-              ref={loveloveRef}
-              image={lovelove}
-              strokeWidth={1}
-              stroke={stroke}
-              scaleX={rect.scaleX}
-              scaleY={rect.scaleY}
-              width={125}
-              height={100}
-              rotation={rect.rotation}
-              x={rect.positionWordX+50}
-              y={rect.positionWordY+50}
-              offsetX={50}
-              offsetY={50}
-              shadowOpacity={0.2}
-              shadowBlur={6}
-              perfectDrawEnabled={false}
-              onTransform={(e:any)=>{
-                const node = loveloveRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x()-50;
-                let positionBoxY = node.y()-50;
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-              onTransformEnd={(e) => {    
-                const node = loveloveRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x()-50;
-                let positionBoxY = node.y()-50;
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-  
-            />
-              <Html groupProps={{ x:rect.positionWordX+50 , y:rect.positionWordY+50, scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:100 , height:100}} divProps={{ style: { opacity:1 } }}>
-                <p className={`${rect.selectedByUserId !== '-' ? 'flex' : 'hidden'} absolute top-[55px] left-[0px] px-[12px] ${isYourSelect ? 'bg-[#1363df]' :'bg-[#ff355f]'} rounded-full text-white text-[12px] drop-shadow-md whitespace-nowrap`}>
-                  {rect.selectedByUsername}
-                </p>
-              </Html>
-          </>
+          Heart(rect, loveloveRef, lovelove, stroke, handleTransformChange, isYourSelect)
         );
       }
       else if(model === 'clapclap'){
         return(
-          <>
-            <Image
-              key={rect.rectId}
-              id={rect.rectId}
-              ref={clapRef}
-              image={clapclap}
-              strokeWidth={1}
-              stroke={stroke}
-              scaleX={rect.scaleX}
-              scaleY={rect.scaleY}
-              width={100}
-              height={100}
-              offsetX={50}
-              offsetY={50}
-              rotation={rect.rotation}
-              x={rect.positionWordX+50}
-              y={rect.positionWordY+50}
-              shadowOpacity={0.2}
-              shadowBlur={6}
-              perfectDrawEnabled={false}
-              onTransform={(e:any)=>{
-                const node = clapRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = 1
-                let positionBoxX = node.x()-50;
-                let positionBoxY = node.y()-50;
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-              onTransformEnd={(e) => {    
-                const node = clapRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = 1
-                let positionBoxX = node.x()-50;
-                let positionBoxY = node.y()-50;
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-  
-            />
-              <Html groupProps={{ x:rect.positionWordX+50 , y:rect.positionWordY+50, scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:100 , height:100}} divProps={{ style: { opacity:1 } }}>
-                <p className={`${rect.selectedByUserId !== '-' ? 'flex' : 'hidden'} absolute top-[55px] left-[0px] px-[12px] ${isYourSelect ? 'bg-[#1363df]' :'bg-[#ff355f]'} rounded-full text-white text-[12px] drop-shadow-md whitespace-nowrap`}>
-                  {rect.selectedByUsername}
-                </p>
-              </Html>
-          </>
+          Clap(rect, clapRef, clapclap, stroke, handleTransformChange, isYourSelect)
         );
       }
       else if(model === 'fighto'){
         return(
-          <>
-            <Image
-              key={rect.rectId}
-              id={rect.rectId}
-              ref={fightoRef}
-              image={fighto}
-              strokeWidth={1}
-              stroke={stroke}
-              scaleX={rect.scaleX}
-              scaleY={rect.scaleY}
-              width={70}
-              height={100}
-              rotation={rect.rotation}
-              x={rect.positionWordX+50}
-              y={rect.positionWordY+100}
-              offsetX={50}
-              offsetY={100}
-              shadowOpacity={0.2}
-              shadowBlur={6}
-              perfectDrawEnabled={false}
-              onTransform={(e:any)=>{
-                const node = fightoRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x()-50;
-                let positionBoxY = node.y()-100;
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-              onTransformEnd={(e) => {    
-                const node = fightoRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x()-50;
-                let positionBoxY = node.y()-100;
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-  
-            />
-              <Html groupProps={{ x:rect.positionWordX+50 , y:rect.positionWordY+100, scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:100 , height:100}} divProps={{ style: { opacity:1 } }}>
-                <p className={`${rect.selectedByUserId !== '-' ? 'flex' : 'hidden'} absolute top-[10px] -left-[15px] px-[12px] ${isYourSelect ? 'bg-[#1363df]' :'bg-[#ff355f]'} rounded-full text-white text-[12px] drop-shadow-md whitespace-nowrap`}>
-                  {rect.selectedByUsername}
-                </p>
-              </Html>
-          </>
+          TwoFinger(rect, fightoRef, fighto, stroke, handleTransformChange, isYourSelect)
         );
       }
       else if(model === 'byebye'){
         return(
-          <>
-            <Image
-              key={rect.rectId}
-              id={rect.rectId}
-              ref={byebyeRef}
-              image={byebye}
-              strokeWidth={1}
-              stroke={stroke}
-              scaleX={rect.scaleX}
-              scaleY={rect.scaleY}
-              width={120}
-              height={100}
-              rotation={rect.rotation}
-              x={rect.positionWordX+100}
-              y={rect.positionWordY+100}
-              offsetX={100}
-              offsetY={100}
-              shadowOpacity={0.2}
-              shadowBlur={6}
-              perfectDrawEnabled={false}
-              onTransform={(e:any)=>{
-                const node = byebyeRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x()-100;
-                let positionBoxY = node.y()-100;
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-              onTransformEnd={(e) => {    
-                const node = byebyeRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                const rotation = node.rotation();
-                let positionBoxX = node.x()-100;
-                let positionBoxY = node.y()-100;
-                handleTransformChange(scaleX,scaleY,rotation,positionBoxX,positionBoxY,rect.rectId)
-              }}
-  
-            />
-              <Html groupProps={{ x:rect.positionWordX+100 , y:rect.positionWordY+100, scaleX:rect.scaleX , scaleY:rect.scaleY , rotation:rect.rotation, width:100 , height:100}} divProps={{ style: { opacity:1 } }}>
-                <p className={`${rect.selectedByUserId !== '-' ? 'flex' : 'hidden'} absolute top-[5px] -left-[30px] px-[12px] ${isYourSelect ? 'bg-[#1363df]' :'bg-[#ff355f]'} rounded-full text-white text-[12px] drop-shadow-md whitespace-nowrap`}>
-                  {rect.selectedByUsername}
-                </p>
-              </Html>
-          </>
+          Bye(rect, byebyeRef, byebye, stroke, handleTransformChange, isYourSelect)
         );
       }
     }
