@@ -33,6 +33,7 @@ export interface whiteBoardUserDataStateType{
     userName:string,
     profilePicture:string,
     backgroundPicture:string,
+    category:string[],
 }
 
 export const whiteBoardUserDataState = atom({
@@ -42,6 +43,7 @@ export const whiteBoardUserDataState = atom({
         userName:'PhyXerSs',
         profilePicture:'https://s.isanook.com/jo/0/rp/r/w300/ya0xa0m1w0/aHR0cHM6Ly9qb294LWNtcy1pbWFnZS0xMjUxMzE2MTYxLmZpbGUubXlxY2xvdWQuY29tLzIwMjEvMDkvMjMvZTQ2YzJkN2ItMDkzYi00NDgzLTkxMjgtMmQ0ZGEyM2IzMTFiLmpwZy8xMDAw.jpg',
         backgroundPicture:'',
+        category:[],
     } as whiteBoardUserDataStateType,
 })
 
@@ -98,6 +100,11 @@ export const linkFromUrlState = atom({
     default:'-' as string,
 })
 
+export const defaultCategorySelectState = atom({
+    key:'default_Category_Select_State',
+    default:'DEFAULT' as string,
+})
+
 export const selectCategoryState = atom({
     key:'select_Category_State',
     default:'DEFAULT' as string,
@@ -131,6 +138,7 @@ export const isShowChangeBackgroundPictureState = atom({
 export interface isShowDeleteConfirmStateType{
     isShowDeleteConfirm:boolean,
     categoryName:string,
+    categoryId:string,
     roomId:string,
     roomName:string,
 }
@@ -140,6 +148,7 @@ export const isShowDeleteConfirmState = atom({
     default:{
         isShowDeleteConfirm:false,
         categoryName:'-',
+        categoryId:'-',
         roomId:'-',
         roomName:'-'
     } as isShowDeleteConfirmStateType,

@@ -1,15 +1,17 @@
 import { AnimatePresence , motion } from 'framer-motion';
 import React, { useState } from 'react'
-import { useRecoilState, useResetRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue, useResetRecoilState, useSetRecoilState } from 'recoil';
 import { deleteCategories, deleteRoom } from '../../pages/api/WhiteboardAPI/api';
-import { isShowDeleteConfirmState, selectCategoryState } from '../../WhiteBoardStateManagement/Atom';
-
+import { defaultCategorySelectState, isShowDeleteConfirmState, selectCategoryState, whiteBoardUserDataState } from '../../WhiteBoardStateManagement/Atom';
+import firebase from '../../firebase/firebase-config';
 function ConfirmDeleteModal() {
     const [isAlert , setIsAlert] = useState<boolean>(false)
+    const [ userData , setUserData ] = useRecoilState(whiteBoardUserDataState);
     const [ isLoading , setIsLoading ] = useState<boolean>(false)
     const [ isShowConfirmDelete , setIsShowConfirmDelete ] = useRecoilState(isShowDeleteConfirmState);
     const resetIsShowConfirmDelete = useResetRecoilState(isShowDeleteConfirmState);
-    const resetSelectCategory = useResetRecoilState(selectCategoryState);
+    const setSelectCategory = useSetRecoilState(selectCategoryState);
+    const defaultCategoy = useRecoilValue(defaultCategorySelectState);
     return (
         <AnimatePresence>
             {isShowConfirmDelete.isShowDeleteConfirm &&
@@ -45,8 +47,17 @@ function ConfirmDeleteModal() {
                                         if(isShowConfirmDelete.roomId === '-'){
                                             setIsLoading(true);
                                             try{
-                                                await deleteCategories(isShowConfirmDelete.categoryName);
-                                                resetSelectCategory();
+                                                // await deleteCategories(isShowConfirmDelete.categoryName);
+                                                await firebase.firestore().collection('whiteboard').doc(isShowConfirmDelete.categoryId).delete();
+                                                firebase.database().ref(`retrospective`).orderByChild('roomDetail/catagories').equalTo(isShowConfirmDelete.categoryId).once('value' , async snapshot =>{
+                                                    let roomList = snapshot.val() as any[];
+                                                    if(roomList !== null){
+                                                        for(let room in roomList){
+                                                            firebase.database().ref(`/retrospective/${room}`).remove();
+                                                        }
+                                                    }
+                                                })
+                                                setSelectCategory(defaultCategoy)
                                                 resetIsShowConfirmDelete();
                                             }catch(err){
                                                 setIsAlert(true);
@@ -56,7 +67,8 @@ function ConfirmDeleteModal() {
                                         }else{
                                             setIsLoading(true)
                                             try{
-                                                await deleteRoom(isShowConfirmDelete.categoryName,isShowConfirmDelete.roomId);
+                                                // await deleteRoom(isShowConfirmDelete.categoryName,isShowConfirmDelete.roomId);
+                                                firebase.database().ref(`retrospective/${isShowConfirmDelete.roomId}`).remove();
                                                 resetIsShowConfirmDelete();
                                             }catch(err){
                                                 console.log(err);

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Transition , Popover } from '@headlessui/react'
 import { useRecoilState, useRecoilValue, useResetRecoilState } from 'recoil';
 import { isReUsernameClickState, isShowChangeBackgroundPictureState, WhiteBoardRoomDataState, whiteBoardUserDataState } from '../../WhiteBoardStateManagement/Atom';
-import { roomListType, userInRoomType } from './Lobby';
+import { categoryObjectType, roomListType, userInRoomType } from './Lobby';
 import firebase from '../../firebase/firebase-config';
 import { isShowChangeProfilePictureState } from '../../PokerStateManagement/Atom';
 function UserProfileModal() {
@@ -16,11 +16,13 @@ function UserProfileModal() {
     const [ countTeamStay , setCountTeamStay ] = useState<number>(0);
     const [ countRoomStay , setCountRoomStay ] = useState<number>(0);
     const [roomList , setRoomList ] = useState<roomListType[]>([]);
+    const [ categoriesList ,setCategoriesList ] = useState<categoryObjectType[]>([]);
     function truncate(str:string,n:number){
         return str?.length > n ? str.substr(0,n-1) + "..." : str;
     }
 
     useEffect(()=>{
+        let unsubCategory = ()=>{};
         if(userData.userId !== '-'){
             firebase.database().ref(`retrospective`).on('value',async(snapshot)=>{
                 if(snapshot.val()!==null){
@@ -59,25 +61,30 @@ function UserProfileModal() {
                     setRoomList([]);
                 }
             })
+            unsubCategory = firebase.firestore().collection('whiteboard').where("userInCategory" , "array-contains" , `${userData.userId}`).orderBy('create').onSnapshot((result)=>{
+                let listCategory = [] as categoryObjectType[];
+                result.docs.forEach((doc,index)=>{
+                        let categoryObj = {} as categoryObjectType;
+                        categoryObj.id = doc.id;
+                        categoryObj.name = doc.data().catagories;
+                        listCategory.push(categoryObj)
+                })
+                setCategoriesList(listCategory);
+            })
         }
-    },[userData])
+    },[userData.userId])
 
     useEffect(()=>{
         let teamStay = [] as string[];
         let roomStay = 0;
         roomList.forEach((room)=>{
-            room.userInRoom.forEach((user)=>{
-                if(userData.userId === user.userId){
-                    roomStay = roomStay + 1;
-                    if(!teamStay.includes(room.categories)){
-                        teamStay.push(room.categories)
-                    }
-                }
-            })
+            if(categoriesList.some(category => category.id === room.categories)){
+                roomStay += 1;
+            }
         })
         setCountRoomStay(roomStay);
-        setCountTeamStay(teamStay.length);
-    },[roomList,userData])
+        setCountTeamStay(categoriesList.length);
+    },[ roomList , userData , categoriesList])
  
     return (
             <>

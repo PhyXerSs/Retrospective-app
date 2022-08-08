@@ -5,10 +5,12 @@ import { styled } from '@mui/material/styles';
 import { editCategory } from '../../pages/api/WhiteboardAPI/api';
 import { useRecoilState } from 'recoil';
 import { selectCategoryState } from '../../WhiteBoardStateManagement/Atom';
+import { categoryObjectType } from './Lobby';
+import firebase from '../../firebase/firebase-config';
 interface props{
     isShowRenameCategory:string;
     setIsShowRenameCategory:React.Dispatch<React.SetStateAction<string>>;
-    categoriesList:string[];
+    categoriesList:categoryObjectType[];
 }
 function RenameCategory({isShowRenameCategory , setIsShowRenameCategory , categoriesList}:props) {
     const categoryNameRef = useRef<HTMLInputElement>(null);
@@ -65,16 +67,17 @@ function RenameCategory({isShowRenameCategory , setIsShowRenameCategory , catego
                                     (async function(){
                                         try{
                                             if(categoryNameRef.current !== null && categoryNameRef.current.value !== '' && !isLoading){
-                                                if(categoriesList.includes(categoryNameRef.current.value)){
+                                                if(categoriesList.some(category=> category.name === categoryNameRef?.current?.value)){
                                                     setIsAlert(true);
                                                     setTimeout(()=>{setIsAlert(false)},3000)
                                                 }else{
                                                     setIsLoading(true);
                                                     let newName = categoryNameRef.current.value;
-                                                    await editCategory(isShowRenameCategory,newName);
-                                                    setSelectCategory(newName);
+                                                    // await editCategory(isShowRenameCategory,newName);
+                                                    firebase.firestore().collection('whiteboard').doc(selectCategory).update({
+                                                        catagories:newName
+                                                    })
                                                     setIsLoading(false);
-                                                    
                                                     setIsShowRenameCategory('-');
                                                 }  
                                             }
@@ -86,7 +89,7 @@ function RenameCategory({isShowRenameCategory , setIsShowRenameCategory , catego
                             }}
                         >
                             <div className="flex items-center gap-5">
-                                <CssTextField required defaultValue={isShowRenameCategory} inputRef={categoryNameRef} fullWidth variant="outlined" label="Team name" size={'small'}/>
+                                <CssTextField required defaultValue={categoriesList.find(category => category.id === selectCategory)?.name} inputRef={categoryNameRef} fullWidth variant="outlined" label="Team name" size={'small'}/>
                                 <button type="submit" className="w-32 flex justify-center items-center drop-shadow-lg bg-[#2c60db] hover:bg-[#153a62] hover:cursor-pointer duration-200 ease-in text-white py-2 rounded-md">
                                     Done
                                 </button>

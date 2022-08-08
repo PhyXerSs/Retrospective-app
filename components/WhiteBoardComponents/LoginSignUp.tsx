@@ -12,6 +12,7 @@ import { useRouter } from "next/router";
 import firebase, { signInWithGoogle } from '../../firebase/firebase-config';
 import UploadPhotoInLogin from './UploadPhotoInLogin';
 import { useWindowSize } from 'usehooks-ts'
+import { firestore } from 'firebase';
 function LoginSignUp() {
     const [ userData , setUserData ] = useRecoilState(whiteBoardUserDataState);
     const [ roomData , setRoomData ] = useRecoilState(WhiteBoardRoomDataState); 
@@ -66,7 +67,7 @@ function LoginSignUp() {
         firebase.auth().onAuthStateChanged(authUser => {
             // console.log(authUser);
             if(authUser){
-                firebase.database().ref(`/userRetrospective/${authUser.uid}`).once('value' , snapshot =>{
+                firebase.database().ref(`/userRetrospective/${authUser.uid}`).once('value' ,async snapshot =>{
                     // old user case
                     if(snapshot.val()){
                         let user = {} as whiteBoardUserDataStateType;
@@ -74,8 +75,15 @@ function LoginSignUp() {
                         user.userName = snapshot.val()?.displayName as string;
                         user.profilePicture = snapshot.val()?.photoURL as string;
                         user.backgroundPicture = snapshot.val()?.backgroundPicture as string;
+                        // user.category = snapshot.val()?.category as string[];
                         setUserData(user);
                     }else{// new user case (login with gmail)
+                        let categoryDocs = await firebase.firestore().collection('whiteboard').add({
+                            'catagories': 'DEFAULT',
+                            'create': new Date().valueOf(),
+                            'userInCategory':[authUser.uid],
+                            'headOfCategory':authUser.uid
+                        })
                         firebase.database().ref(`/userRetrospective/${authUser.uid}`).set({
                             displayName:authUser?.displayName,
                             photoURL:authUser?.photoURL,
@@ -86,6 +94,7 @@ function LoginSignUp() {
                         user.userName = authUser?.displayName as string;
                         user.profilePicture = authUser?.photoURL as string;
                         user.backgroundPicture = ''
+                        // user.category = [categoryDocs.id] as string[];
                         setUserData(user);
                     }
                 })
@@ -110,6 +119,17 @@ function LoginSignUp() {
     useEffect(()=>{
         if(linkFromUrl !== '-' && userData.userId !== '-'){
             (async function(){
+                await firebase.database().ref(`retrospective/${linkFromUrl}/roomDetail`).once('value' , async snapshot =>{
+                    let categoryId = snapshot.val().catagories
+
+                    let categoyDoc = await firebase.firestore().collection('whiteboard').doc(categoryId).get();
+                    let usersCategoryList = categoyDoc.data()?.userInCategory as string[];
+                    if(!usersCategoryList.includes(userData.userId)){
+                        await firebase.firestore().collection('whiteboard').doc(categoryId).update({
+                            userInCategory:[...usersCategoryList, userData.userId]
+                        });
+                    }
+                })
                 await Promise.all([
                     firebase.database().ref(`retrospective/${linkFromUrl}/roomDetail/userInRoom/${userData.userId}`).set({
                         name:userData.userName,
@@ -164,7 +184,12 @@ function LoginSignUp() {
         if(signupEmailRef.current && signupPasswordRef.current && signupDisplayName.current){
             try{
                 let resultSignup = await firebase.auth().createUserWithEmailAndPassword(signupEmailRef.current.value , signupPasswordRef.current.value);
-                console.log(resultSignup);
+                let categoryDocs = await firebase.firestore().collection('whiteboard').add({
+                    'catagories': 'DEFAULT',
+                    'create': new Date().valueOf(),
+                    'userInCategory':[resultSignup?.user?.uid],
+                    'headOfCategory':resultSignup?.user?.uid
+                })
                 await firebase.database().ref(`/userRetrospective/${resultSignup?.user?.uid}`).set({
                     displayName:signupDisplayName.current.value.replaceAll(" ","").replaceAll("-",""),
                     photoURL:'/static/images/whiteboard/profile.png',
@@ -173,8 +198,9 @@ function LoginSignUp() {
                 let newUser = {} as whiteBoardUserDataStateType;
                 newUser.userId = resultSignup?.user?.uid as string;
                 newUser.userName = signupDisplayName.current.value.replaceAll(" ","").replaceAll("-","");
-                newUser.profilePicture = "/static/images/whiteboard/profile.png"
-                newUser.backgroundPicture = ""
+                newUser.profilePicture = "/static/images/whiteboard/profile.png";
+                newUser.backgroundPicture = "";
+                // newUser.category = [categoryDocs.id];
                 setDelayAnimation(-1);
                 setTimeout(()=>{
                     setUserData(newUser);

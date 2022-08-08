@@ -3,14 +3,19 @@ import React, { useRef, useState } from 'react'
 import TextField from '@mui/material/TextField';
 import { styled } from '@mui/material/styles';
 import { createCategories } from '../../pages/api/WhiteboardAPI/api';
+import { categoryObjectType } from './Lobby';
+import firebase from '../../firebase/firebase-config';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { whiteBoardUserDataState } from '../../WhiteBoardStateManagement/Atom';
 interface props{
     isCreateCategoryClick:boolean;
     setIsCreateCategoryClick:React.Dispatch<React.SetStateAction<boolean>>;
-    categoriesList:string[]
+    categoriesList:categoryObjectType[]
 }
 
 function CreateCategoryModal({isCreateCategoryClick , setIsCreateCategoryClick , categoriesList}:props) {
     const categoryNameRef = useRef<HTMLInputElement>(null);
+    const [userData , setUserData] = useRecoilState(whiteBoardUserDataState);
     const [ isAlert , setIsAlert ] = useState<boolean>(false);
     const [ isLoading , setIsLoading ] = useState<boolean>(false);
     const CssTextField = styled(TextField)({
@@ -63,12 +68,24 @@ function CreateCategoryModal({isCreateCategoryClick , setIsCreateCategoryClick ,
                                     (async function(){
                                         try{
                                             if(categoryNameRef.current !== null && categoryNameRef.current.value !== '' && !isLoading){
-                                                if(categoriesList.includes(categoryNameRef.current.value)){
+                                                if(categoriesList.some(category=> category.name === categoryNameRef?.current?.value)){
                                                     setIsAlert(true);
                                                     setTimeout(()=>{setIsAlert(false)},3000)
                                                 }else{
                                                     setIsLoading(true);
-                                                    await createCategories(categoryNameRef.current.value);
+                                                    // await createCategories(categoryNameRef.current.value);
+                                                    let categoryDoc = await firebase.firestore().collection('whiteboard').add({
+                                                        'catagories': categoryNameRef?.current?.value,
+                                                        'create': new Date().valueOf(),
+                                                        'userInCategory':[userData.userId],
+                                                        'headOfCategory':userData.userId
+                                                    })
+                                                    // firebase.database().ref(`/userRetrospective/${userData.userId}/category`).once('value' , snapshot =>{
+                                                    //     let oldCategoryList = snapshot.val();
+                                                    //     firebase.database().ref(`/userRetrospective/${userData.userId}`).update({
+                                                    //         category:[...oldCategoryList , categoryDoc.id]
+                                                    //     })
+                                                    // })
                                                     setIsLoading(false);
                                                     setIsCreateCategoryClick(false)
                                                 }  

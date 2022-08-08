@@ -1,8 +1,8 @@
 import { AnimatePresence , motion } from 'framer-motion'
 import React, { useEffect, useRef, useState } from 'react'
-import { useRecoilState, useResetRecoilState, useSetRecoilState } from 'recoil'
+import { Snapshot, useRecoilState, useResetRecoilState, useSetRecoilState } from 'recoil'
 import firebase from '../../firebase/firebase-config';
-import { isReUsernameClickState, isShowChangeBackgroundPictureState, isShowChangeProfilePictureState, RoomDataStateType, selectCategoryState, WhiteBoardRoomDataState, whiteBoardUserDataState } from '../../WhiteBoardStateManagement/Atom'
+import { defaultCategorySelectState, isReUsernameClickState, isShowChangeBackgroundPictureState, isShowChangeProfilePictureState, RoomDataStateType, selectCategoryState, WhiteBoardRoomDataState, whiteBoardUserDataState } from '../../WhiteBoardStateManagement/Atom'
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import TextField from '@mui/material/TextField';
@@ -20,6 +20,7 @@ import UserProfileModal from './UserProfileModal';
 import ChangeProfilePicture from './ChangeProfilePicture';
 import ChangeBackground from './ChangeBackground';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
+import { nanoid } from 'nanoid';
 export interface userInRoomType{
     userId:string,
     name:string,
@@ -39,6 +40,11 @@ export interface roomListType{
     userInRoom:userInRoomType[],
 }
 
+export interface categoryObjectType{
+    id:string,
+    name:string
+}
+
 function Lobby() {
     const [userData , setUserData] = useRecoilState(whiteBoardUserDataState);
     const [roomData , setRoomData] = useRecoilState(WhiteBoardRoomDataState);
@@ -47,9 +53,10 @@ function Lobby() {
     const [ isCreateRoomClick , setIsCreateRoomClick ] = useState<boolean>(false);
     const roomNameRef = useRef<HTMLInputElement>(null)
     const [isLoading , setIsLoading] = useState<boolean>(false)
+    const [ defaultCategoy , setDefaultCategory ] = useRecoilState(defaultCategorySelectState);
     const [ selectCategory , setSelectCategory ] = useRecoilState(selectCategoryState);
     const resetSelectCategory = useResetRecoilState(selectCategoryState);
-    const [ categoriesList , setCategoriesList ] = useState<string[]>([]);
+    const [ categoriesList , setCategoriesList ] = useState<categoryObjectType[]>([]);
     const [ searchText , setSearchText ] = useState<string>('');
     const [ filter , setFilter ] = useState<string>('Last opened');
     const [ isHoverRoom , setIsHoverRoom ] = useState<number>(-1);
@@ -84,6 +91,7 @@ function Lobby() {
     useEffect(()=>{
         let unsubCategory = () => {};
         if(userData.userId !== '-' && roomData.roomId === '-'){
+            //get room
             firebase.database().ref(`retrospective`).on('value',async(snapshot)=>{
                 if(snapshot.val()!==null){
                     let allRoom = snapshot.val();
@@ -121,20 +129,48 @@ function Lobby() {
                     setRoomList([]);
                 }
             })
-            unsubCategory = firebase.firestore().collection('whiteboard').orderBy("create").onSnapshot((result)=>{
-                let listCategory = [] as string[];
-                result.docs.forEach((doc)=>{
-                    listCategory.push(doc.data().catagories)
+
+            // setSelectCategory(userData.category[0])
+            //get categorylist
+            // firebase.database().ref(`/userRetrospective/${userData.userId}/category`).on('value' , async snapshot =>{
+            //     let ownCategories = snapshot.val();
+            //     let allCategories = await firebase.firestore().collection('whiteboard').orderBy("create").get();
+            //     let listCategory = [] as categoryObjectType[];
+            //     allCategories.docs.forEach((doc)=>{
+            //         if(ownCategories.includes(doc.id)){
+            //             let categoryObj = {} as categoryObjectType;
+            //             categoryObj.id = doc.id;
+            //             categoryObj.name = doc.data().catagories;
+            //             listCategory.push(categoryObj)
+            //         }
+            //     })
+            //     setCategoriesList(listCategory);
+            // })
+            unsubCategory = firebase.firestore().collection('whiteboard').where("userInCategory" , "array-contains" , `${userData.userId}`).orderBy('create').onSnapshot((result)=>{
+                let listCategory = [] as categoryObjectType[];
+                result.docs.forEach((doc,index)=>{
+                        if(index===0){
+                            setDefaultCategory(doc.id);
+                        }
+                        let categoryObj = {} as categoryObjectType;
+                        categoryObj.id = doc.id;
+                        categoryObj.name = doc.data().catagories;
+                        listCategory.push(categoryObj)
                 })
                 setCategoriesList(listCategory);
             })
         }
         return()=>{
             firebase.database().ref(`retrospective`).off();
+            firebase.database().ref(`/userRetrospective/${userData.userId}/category`).off();
             unsubCategory();
         }
     },[userData , roomData]);
     
+    useEffect(()=>{
+        setSelectCategory(defaultCategoy);
+    },[defaultCategoy])
+
     useEffect(()=>{
 
         function compareLastOpen( a:roomListType, b:roomListType ) {
@@ -175,7 +211,7 @@ function Lobby() {
             }
             return 0;
         }
-        let roomListFilter = roomList?.filter(room => (room?.categories === selectCategory || selectCategory === 'DEFAULT')).filter(room=> room?.roomName?.includes(searchText));
+        let roomListFilter = roomList?.filter(room => room?.categories === selectCategory).filter(room=> room?.roomName?.includes(searchText));
         if(filter === 'Last opened'){
             roomListFilter.sort(compareLastOpen)
         }
@@ -465,29 +501,33 @@ function Lobby() {
                                 </svg>
                                 <p className="font-bold text-h4 text-gray"> Create Room</p>
                                 <form  className="w-full h-fit" 
-                                    onSubmit={(e)=>{
-                                            (async function(){
-                                                try{
-                                                    if(roomNameRef.current !== null && roomNameRef.current.value !== '' && !isLoading){
-                                                        setIsLoading(true);
-                                                        let res = await createRoom(userData.userId , userData.userName , selectCategory , roomNameRef.current.value.replaceAll(" ","").replaceAll("-",""));
-                                                        // await firebase.database().ref(`retrospective/${idRoom}/roomDetail`).set({
-                                                        //     roomName:roomNameRef.current.value.replaceAll(" ","").replaceAll("-",""),
-                                                        //     roomImage:"",
-                                                        //     createBy:userData.userId
-                                                        // })
-                                                        console.log(res);
-                                                        if(res === 'not exist category'){
-                                                            resetSelectCategory();
-                                                        }
-                                                        setIsLoading(false);
-                                                        setIsCreateRoomClick(false);
-                                                    }
-                                                }catch(err){
-                                                    console.log(err);
+                                    onSubmit={async(e)=>{
+                                            e.preventDefault();
+                                            try{
+                                                if(roomNameRef.current !== null && roomNameRef.current.value !== '' && !isLoading){
+                                                    setIsLoading(true);
+                                                    // let res = await createRoom(userData.userId , userData.userName , selectCategory , roomNameRef.current.value.replaceAll(" ","").replaceAll("-",""));
+                                                    const t = String(new Date().valueOf())
+                                                    const roomid = t + nanoid(6);
+                                                    let roomName = roomNameRef.current.value.replaceAll(" ","").replaceAll("-","")
+                                                    await firebase.database().ref(`retrospective/${roomid}/roomDetail`).set({
+                                                        'roomName': roomName,
+                                                        'roomImage': "",
+                                                        'createBy': userData.userId,
+                                                        'createByName': userData.userName,
+                                                        'catagories': selectCategory,
+                                                        'lastModified': new Date().valueOf(),
+                                                    })
+                                                    // console.log(res);
+                                                    // if(res === 'not exist category'){
+                                                    //     resetSelectCategory();
+                                                    // }
+                                                    setIsLoading(false);
+                                                    setIsCreateRoomClick(false);
                                                 }
-                                            }())
-                                        e.preventDefault();
+                                            }catch(err){
+                                                console.log(err);
+                                            }
                                     }}
                                 >
                                     <CssTextField required inputRef={roomNameRef} fullWidth variant="outlined" label="room name" size={'small'} style={{ marginTop:'60px' }}/>
