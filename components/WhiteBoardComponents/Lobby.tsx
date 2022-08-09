@@ -510,14 +510,33 @@ function Lobby() {
                                                     const t = String(new Date().valueOf())
                                                     const roomid = t + nanoid(6);
                                                     let roomName = roomNameRef.current.value.replaceAll(" ","").replaceAll("-","")
-                                                    await firebase.database().ref(`retrospective/${roomid}/roomDetail`).set({
-                                                        'roomName': roomName,
-                                                        'roomImage': "",
-                                                        'createBy': userData.userId,
-                                                        'createByName': userData.userName,
-                                                        'catagories': selectCategory,
-                                                        'lastModified': new Date().valueOf(),
-                                                    })
+                                                    let categoryDoc = await firebase.firestore().collection('whiteboard').doc(selectCategory).get();
+                                                    if(categoryDoc.exists){
+                                                        await firebase.database().ref(`retrospective/${roomid}/roomDetail`).set({
+                                                            'roomName': roomName,
+                                                            'roomImage': "",
+                                                            'createBy': userData.userId,
+                                                            'createByName': userData.userName,
+                                                            'catagories': selectCategory,
+                                                            'lastModified': new Date().valueOf(),
+                                                        })
+                                                    }else{
+                                                        let newCategoryDoc = await firebase.firestore().collection('whiteboard').add({
+                                                            'catagories': 'untitled',
+                                                            'create': new Date().valueOf(),
+                                                            'userInCategory':[userData.userId],
+                                                            'headOfCategory':userData.userId
+                                                        })
+                                                        await firebase.database().ref(`retrospective/${roomid}/roomDetail`).set({
+                                                            'roomName': roomName,
+                                                            'roomImage': "",
+                                                            'createBy': userData.userId,
+                                                            'createByName': userData.userName,
+                                                            'catagories': newCategoryDoc.id,
+                                                            'lastModified': new Date().valueOf(),
+                                                        })
+                                                        setSelectCategory(newCategoryDoc.id);
+                                                    }
                                                     // console.log(res);
                                                     // if(res === 'not exist category'){
                                                     //     resetSelectCategory();
