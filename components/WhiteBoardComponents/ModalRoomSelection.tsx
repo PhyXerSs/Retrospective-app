@@ -156,6 +156,7 @@ function ModalRoomSelection({room , index , isHoverRoom , setIsHoverRoom , setIs
                                 e.stopPropagation();
                                 setIsShowDeleteConfirm({
                                     isShowDeleteConfirm:true,
+                                    categoryId:selectCategory,
                                     categoryName:selectCategory,
                                     roomId:room.roomId,
                                     roomName:room.roomName
