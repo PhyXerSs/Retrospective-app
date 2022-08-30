@@ -2,7 +2,7 @@ import { AnimatePresence , motion } from 'framer-motion'
 import React, { useEffect, useRef, useState } from 'react'
 import { Snapshot, useRecoilState, useResetRecoilState, useSetRecoilState } from 'recoil'
 import firebase from '../../firebase/firebase-config';
-import { defaultCategorySelectState, isReUsernameClickState, isShowChangeBackgroundPictureState, isShowChangeProfilePictureState, RoomDataStateType, selectCategoryState, WhiteBoardRoomDataState, whiteBoardUserDataState } from '../../WhiteBoardStateManagement/Atom'
+import { defaultCategorySelectState, isReUsernameClickState, isShowChangeBackgroundPictureState, isShowChangeProfilePictureState, messageModalAlertState, RoomDataStateType, selectCategoryState, WhiteBoardRoomDataState, whiteBoardUserDataState } from '../../WhiteBoardStateManagement/Atom'
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import TextField from '@mui/material/TextField';
@@ -21,6 +21,8 @@ import ChangeProfilePicture from './ChangeProfilePicture';
 import ChangeBackground from './ChangeBackground';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 import { nanoid } from 'nanoid';
+import ModalAlert from './ModalPopupAlert/ModalAlert';
+import ModalConfrimLeaveCategory from './ModalPopupAlert/ModalConfrimLeaveCategory';
 export interface userInRoomType{
     userId:string,
     name:string,
@@ -42,7 +44,8 @@ export interface roomListType{
 
 export interface categoryObjectType{
     id:string,
-    name:string
+    name:string,
+    headOfCategory:string,
 }
 
 function Lobby() {
@@ -68,6 +71,7 @@ function Lobby() {
     const [ isReUsernameClick , setIsReUsernameClick ] = useRecoilState(isReUsernameClickState);
     const [isShowChangeProfilePicture, setIsShowChangeProfilePicture] =useRecoilState(isShowChangeProfilePictureState);
     const [isShowChangeBackgroundPicture , setIsShowChangeBackgroundPicture] = useRecoilState(isShowChangeBackgroundPictureState);
+    const [ messageModalAlert , setMessageModalAlert ] = useRecoilState(messageModalAlertState);
     const CssTextField = styled(TextField)({
         '& label.Mui-focused': {
           borderColor:'#94a3b8',
@@ -155,6 +159,7 @@ function Lobby() {
                         let categoryObj = {} as categoryObjectType;
                         categoryObj.id = doc.id;
                         categoryObj.name = doc.data().catagories;
+                        categoryObj.headOfCategory = doc.data().headOfCategory;
                         listCategory.push(categoryObj)
                 })
                 setCategoriesList(listCategory);
@@ -478,6 +483,8 @@ function Lobby() {
             {isReUsernameClick && <ReUsername/>}
             {isShowChangeProfilePicture &&<ChangeProfilePicture/>}
             {isShowChangeBackgroundPicture && <ChangeBackground/>}
+            <ModalAlert/>
+            <ModalConfrimLeaveCategory/>
             <ConfirmDeleteModal/>
             <AnimatePresence>
                 {isCreateRoomClick && 
@@ -521,21 +528,22 @@ function Lobby() {
                                                             'lastModified': new Date().valueOf(),
                                                         })
                                                     }else{
-                                                        let newCategoryDoc = await firebase.firestore().collection('whiteboard').add({
-                                                            'catagories': 'untitled',
-                                                            'create': new Date().valueOf(),
-                                                            'userInCategory':[userData.userId],
-                                                            'headOfCategory':userData.userId
-                                                        })
-                                                        await firebase.database().ref(`retrospective/${roomid}/roomDetail`).set({
-                                                            'roomName': roomName,
-                                                            'roomImage': "",
-                                                            'createBy': userData.userId,
-                                                            'createByName': userData.userName,
-                                                            'catagories': newCategoryDoc.id,
-                                                            'lastModified': new Date().valueOf(),
-                                                        })
-                                                        setSelectCategory(newCategoryDoc.id);
+                                                        setMessageModalAlert('Please select a team before Create Room.')
+                                                        // let newCategoryDoc = await firebase.firestore().collection('whiteboard').add({
+                                                        //     'catagories': 'untitled',
+                                                        //     'create': new Date().valueOf(),
+                                                        //     'userInCategory':[userData.userId],
+                                                        //     'headOfCategory':userData.userId
+                                                        // })
+                                                        // await firebase.database().ref(`retrospective/${roomid}/roomDetail`).set({
+                                                        //     'roomName': roomName,
+                                                        //     'roomImage': "",
+                                                        //     'createBy': userData.userId,
+                                                        //     'createByName': userData.userName,
+                                                        //     'catagories': newCategoryDoc.id,
+                                                        //     'lastModified': new Date().valueOf(),
+                                                        // })
+                                                        // setSelectCategory(newCategoryDoc.id);
                                                     }
                                                     // console.log(res);
                                                     // if(res === 'not exist category'){

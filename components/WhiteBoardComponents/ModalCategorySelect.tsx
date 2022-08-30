@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Transition , Popover } from '@headlessui/react'
 import { motion } from 'framer-motion'
 import { useRecoilState, useResetRecoilState, useSetRecoilState } from 'recoil';
-import { isShowDeleteConfirmState, selectCategoryState } from '../../WhiteBoardStateManagement/Atom';
+import { isShowDeleteConfirmState, leaveCategoryState, selectCategoryState, whiteBoardUserDataState } from '../../WhiteBoardStateManagement/Atom';
 import { deleteCategories } from '../../pages/api/WhiteboardAPI/api';
 import { categoryObjectType } from './Lobby';
 interface props{
@@ -16,6 +16,8 @@ interface props{
 function ModalCategorySelect({index,category , isShowDropdownCategory , setIsShowDropdownCategory , setIsShowRenameCategory} : props) {
     const [ selectCategory , setSelectCategory ] = useRecoilState(selectCategoryState);
     const setIsShowDeleteConfirm = useSetRecoilState(isShowDeleteConfirmState);
+    const [ userData , setUserData ] = useRecoilState(whiteBoardUserDataState);
+    const setLeaveCategory = useSetRecoilState(leaveCategoryState);
     return(
         <Popover>
             {({ open , close}:{open:any , close:any})=>{
@@ -54,6 +56,7 @@ function ModalCategorySelect({index,category , isShowDropdownCategory , setIsSho
                         >
                             { selectCategory === category.id &&
                             <Popover.Panel className="absolute w-40 flex flex-col items-center left-44 -top-[50px] bg-white rounded-lg drop-shadow-md" >
+                                {category.headOfCategory === userData.userId &&
                                 <Popover.Button className="flex justify-start py-4 px-8 items-center w-full bg-white  rounded-t-md cursor-pointer duration-150 ease-in hover:bg-[#e8f3ff] gap-2 border-b-[1px] border-b-secondary-gray-4"
                                     onClick={async(e:any)=>{
                                         e.stopPropagation();
@@ -61,7 +64,8 @@ function ModalCategorySelect({index,category , isShowDropdownCategory , setIsSho
                                     }}
                                 >
                                     <p>Rename</p>
-                                </Popover.Button>
+                                </Popover.Button>}
+                                {category.headOfCategory === userData.userId ?
                                 <Popover.Button className="flex justify-start py-4 px-8 items-center w-full bg-white rounded-b-md cursor-pointer duration-150 ease-in hover:bg-[#e8f3ff] gap-2"
                                     onClick={async(e:any)=>{
                                         e.stopPropagation();
@@ -84,6 +88,17 @@ function ModalCategorySelect({index,category , isShowDropdownCategory , setIsSho
                                 >
                                     <p>Delete</p>
                                 </Popover.Button>
+                                :<Popover.Button className="flex justify-start py-4 px-8 items-center w-full bg-white rounded-b-md cursor-pointer duration-150 ease-in hover:bg-[#e8f3ff] gap-2"
+                                    onClick={async(e:any)=>{
+                                        e.stopPropagation();
+                                        setLeaveCategory({
+                                            categoryName:category.name,
+                                            categoryId:category.id,
+                                        })
+                                    }}
+                                >
+                                    <p>Leave</p>
+                                </Popover.Button>}
                             </Popover.Panel>
                             }
                             

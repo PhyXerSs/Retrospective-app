@@ -193,7 +193,16 @@ function UserInRoom({autoGetUrlRoomImage , setIsShareClick}:{autoGetUrlRoomImage
                     <div className=" w-fit flex justify-start items-center h-[60px] pb-1 ml-0 md:ml-3 z-[999] overflow-clip">
                         {!showTextAreaRenameRoom &&
                         <p className={`ease-in duration-200 text-[22px] font-semibold`}
-                            onClick={()=>setShowTextAreaRenameRoom(true)}
+                            onClick={async()=>{
+                                firebase.database().ref(`/retrospective/${roomData.roomId}/roomDetail`).once('value' , async snapshot =>{
+                                    let categoryId = snapshot.val()?.catagories as string;
+                                    let categoyDoc = await firebase.firestore().collection('whiteboard').doc(categoryId).get();
+                                    let headCategoryId = categoyDoc.data()?.headOfCategory as string;
+                                    if(userData.userId === headCategoryId || userData.userId === roomData.createBy){
+                                        setShowTextAreaRenameRoom(true)
+                                    }
+                                })   
+                            }}
                         >{renderRoomName()}</p>
                         }
                         <input ref={inputRef} className={`outline-none text-[22px] ${showTextAreaRenameRoom ? 'w-[200px] md:w-[300px]' : 'w-0'} `}

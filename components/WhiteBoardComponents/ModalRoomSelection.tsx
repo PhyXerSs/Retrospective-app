@@ -3,7 +3,7 @@ import { AnimatePresence , motion } from 'framer-motion'
 import { roomListType } from './Lobby';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import firebase from '../../firebase/firebase-config';
-import { isShowDeleteConfirmState, RoomDataStateType, WhiteBoardRoomDataState, whiteBoardUserDataState } from '../../WhiteBoardStateManagement/Atom';
+import { isShowDeleteConfirmState, messageModalAlertState, RoomDataStateType, WhiteBoardRoomDataState, whiteBoardUserDataState } from '../../WhiteBoardStateManagement/Atom';
 import { useRecoilState, useSetRecoilState } from 'recoil';
 import { Transition , Popover } from '@headlessui/react'
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -25,6 +25,7 @@ function ModalRoomSelection({room , index , isHoverRoom , setIsHoverRoom , setIs
     const inputRenameRef = useRef<HTMLInputElement>(null);
     const [isLoading , setIsLoading] = useState<boolean>(false);
     const setIsShowDeleteConfirm = useSetRecoilState(isShowDeleteConfirmState);
+    const [ messageModalAlert , setMessageModalAlert ] = useRecoilState(messageModalAlertState);
     useEffect(()=>{
         if(inputRenameRef.current){
             inputRenameRef.current.value = room.roomName;
@@ -95,9 +96,15 @@ function ModalRoomSelection({room , index , isHoverRoom , setIsHoverRoom , setIs
                         />
                     </div>
                     <svg className="cursor-pointer" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"
-                        onClick={(e)=>{
+                        onClick={async(e)=>{
                             e.stopPropagation();
-                            setIsShowRenameInput(index);
+                            let categoyDoc = await firebase.firestore().collection('whiteboard').doc(room.categories).get();
+                            let headCategoryId = categoyDoc.data()?.headOfCategory as string;
+                            if(userData.userId === headCategoryId || userData.userId === room.createBy ){
+                                setIsShowRenameInput(index);
+                            }else{
+                                setMessageModalAlert("You haven't permission to rename room");
+                            }
                         }}
                     >
                             <path d="M0 14.2505V18H3.74948L14.8079 6.94154L11.0585 3.19206L0 14.2505ZM17.7075 4.04194C18.0975 3.65199 18.0975 3.02208 17.7075 2.63213L15.3679 0.292459C14.9779 -0.0974865 14.348 -0.0974865 13.9581 0.292459L12.1283 2.12221L15.8778 5.87168L17.7075 4.04194V4.04194Z" fill={isHoverRoom === index ? "#757575" : "#c2c2c2" }/>
@@ -122,7 +129,13 @@ function ModalRoomSelection({room , index , isHoverRoom , setIsHoverRoom , setIs
                         <Popover.Button className="flex justify-start p-4 items-center w-full bg-white  rounded-t-md cursor-pointer duration-150 ease-in hover:bg-[#e8f3ff] gap-2"
                             onClick={async(e:any)=>{
                                 e.stopPropagation();
-                                setIsShowRenameInput(index);
+                                let categoyDoc = await firebase.firestore().collection('whiteboard').doc(room.categories).get();
+                                let headCategoryId = categoyDoc.data()?.headOfCategory as string;
+                                if(userData.userId === headCategoryId || userData.userId === room.createBy ){
+                                    setIsShowRenameInput(index);
+                                }else{
+                                    setMessageModalAlert("You haven't permission to rename room");
+                                }
                             }}
                         >
                             <p>Rename</p>
@@ -154,13 +167,20 @@ function ModalRoomSelection({room , index , isHoverRoom , setIsHoverRoom , setIs
                         <Popover.Button className="flex justify-start p-4 items-center w-full bg-white rounded-b-md cursor-pointer duration-150 ease-in hover:bg-[#e8f3ff] gap-2"
                             onClick={async(e:any)=>{
                                 e.stopPropagation();
-                                setIsShowDeleteConfirm({
-                                    isShowDeleteConfirm:true,
-                                    categoryId:selectCategory,
-                                    categoryName:selectCategory,
-                                    roomId:room.roomId,
-                                    roomName:room.roomName
-                                })
+                                let categoyDoc = await firebase.firestore().collection('whiteboard').doc(room.categories).get();
+                                let headCategoryId = categoyDoc.data()?.headOfCategory as string;
+                                if(userData.userId === headCategoryId || userData.userId === room.createBy ){
+                                    setIsShowDeleteConfirm({
+                                        isShowDeleteConfirm:true,
+                                        categoryId:selectCategory,
+                                        categoryName:selectCategory,
+                                        roomId:room.roomId,
+                                        roomName:room.roomName
+                                    })
+                                }else{
+                                    setMessageModalAlert("You haven't permission to delete room");
+                                }
+                                
                                 // if(!isLoading){
                                 //     setIsLoading(true);
                                 //     await deleteRoom(selectCategory,room.roomId);

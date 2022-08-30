@@ -153,3 +153,21 @@ export const isShowDeleteConfirmState = atom({
         roomName:'-'
     } as isShowDeleteConfirmStateType,
 })
+
+export const messageModalAlertState = atom({
+    key:'message_Modal_Alert_State',
+    default:'-' as string
+})
+
+export interface leaveCategoryType{
+    categoryName:string,
+    categoryId:string,
+}
+
+export const leaveCategoryState = atom({
+    key:'leave_Category_State',
+    default:{
+        categoryName:'-',
+        categoryId:'-',
+    } as leaveCategoryType
+})
