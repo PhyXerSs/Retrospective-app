@@ -120,28 +120,31 @@ function LoginSignUp() {
         if(linkFromUrl !== '-' && userData.userId !== '-'){
             (async function(){
                 await firebase.database().ref(`retrospective/${linkFromUrl}/roomDetail`).once('value' , async snapshot =>{
-                    let categoryId = snapshot.val().catagories
+                    if(snapshot.val()){
+                        let categoryId = snapshot.val()?.catagories
 
-                    let categoyDoc = await firebase.firestore().collection('whiteboard').doc(categoryId).get();
-                    let usersCategoryList = categoyDoc.data()?.userInCategory as string[];
-                    if(!usersCategoryList.includes(userData.userId)){
-                        await firebase.firestore().collection('whiteboard').doc(categoryId).update({
-                            userInCategory:[...usersCategoryList, userData.userId]
-                        });
+                        let categoyDoc = await firebase.firestore().collection('whiteboard').doc(categoryId).get();
+                        let usersCategoryList = categoyDoc.data()?.userInCategory as string[];
+                        if(!usersCategoryList.includes(userData.userId)){
+                            await firebase.firestore().collection('whiteboard').doc(categoryId).update({
+                                userInCategory:[...usersCategoryList, userData.userId]
+                            });
+                        }
+                        await Promise.all([
+                            firebase.database().ref(`retrospective/${linkFromUrl}/roomDetail/userInRoom/${userData.userId}`).set({
+                                name:userData.userName,
+                                profilePicture:userData.profilePicture,
+                                isOnline:true,
+                            }),
+                            firebase.database().ref(`userRetrospective/${userData.userId}`).update({
+                                statusOnline:true,
+                                room:linkFromUrl
+                            }),
+                            
+                        ]);
                     }
                 })
-                await Promise.all([
-                    firebase.database().ref(`retrospective/${linkFromUrl}/roomDetail/userInRoom/${userData.userId}`).set({
-                        name:userData.userName,
-                        profilePicture:userData.profilePicture,
-                        isOnline:true,
-                    }),
-                    firebase.database().ref(`userRetrospective/${userData.userId}`).update({
-                        statusOnline:true,
-                        room:linkFromUrl
-                    }),
-                    
-                ]);
+                
                 await firebase.database().ref(`retrospective/${linkFromUrl}/roomDetail`).once('value' , snapshot =>{
                     if(snapshot.val() !== null){
                         let roomSelect = {} as RoomDataStateType;

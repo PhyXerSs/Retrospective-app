@@ -78,7 +78,8 @@ function CreateCategoryModal({isCreateCategoryClick , setIsCreateCategoryClick ,
                                                         'catagories': categoryNameRef?.current?.value,
                                                         'create': new Date().valueOf(),
                                                         'userInCategory':[userData.userId],
-                                                        'headOfCategory':userData.userId
+                                                        'headOfCategory':userData.userId,
+                                                        'userAllowAccessAllBoard':[userData.userId],
                                                     })
                                                     // firebase.database().ref(`/userRetrospective/${userData.userId}/category`).once('value' , snapshot =>{
                                                     //     let oldCategoryList = snapshot.val();

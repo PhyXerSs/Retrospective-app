@@ -2,7 +2,7 @@ import { AnimatePresence , motion } from 'framer-motion'
 import React, { useEffect, useRef, useState } from 'react'
 import { Snapshot, useRecoilState, useResetRecoilState, useSetRecoilState } from 'recoil'
 import firebase from '../../firebase/firebase-config';
-import { defaultCategorySelectState, isReUsernameClickState, isShowChangeBackgroundPictureState, isShowChangeProfilePictureState, messageModalAlertState, RoomDataStateType, selectCategoryState, WhiteBoardRoomDataState, whiteBoardUserDataState } from '../../WhiteBoardStateManagement/Atom'
+import { defaultCategorySelectState, isPermissionAllowAllBoardStage, isReUsernameClickState, isShowChangeBackgroundPictureState, isShowChangeProfilePictureState, messageModalAlertState, RoomDataStateType, selectCategoryState, WhiteBoardRoomDataState, whiteBoardUserDataState } from '../../WhiteBoardStateManagement/Atom'
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import TextField from '@mui/material/TextField';
@@ -23,6 +23,7 @@ import ConfirmDeleteModal from './ConfirmDeleteModal';
 import { nanoid } from 'nanoid';
 import ModalAlert from './ModalPopupAlert/ModalAlert';
 import ModalConfrimLeaveCategory from './ModalPopupAlert/ModalConfrimLeaveCategory';
+import PermissionSettingModal from './PermissionSettingModal';
 export interface userInRoomType{
     userId:string,
     name:string,
@@ -72,6 +73,9 @@ function Lobby() {
     const [isShowChangeProfilePicture, setIsShowChangeProfilePicture] =useRecoilState(isShowChangeProfilePictureState);
     const [isShowChangeBackgroundPicture , setIsShowChangeBackgroundPicture] = useRecoilState(isShowChangeBackgroundPictureState);
     const [ messageModalAlert , setMessageModalAlert ] = useRecoilState(messageModalAlertState);
+    const [ categoryObj , setCategoryObj ] = useState<categoryObjectType>({id:'',name:'',headOfCategory:''});
+    const [ categoryPermissionSelected , setCategoryPermissionSelected ] = useState('-');
+    const [ isPermissionAllowAllBoard , setIsPermissionAllowAllBoard ] = useRecoilState(isPermissionAllowAllBoardStage);
     const CssTextField = styled(TextField)({
         '& label.Mui-focused': {
           borderColor:'#94a3b8',
@@ -93,7 +97,6 @@ function Lobby() {
         },
       });
     useEffect(()=>{
-        let unsubCategory = () => {};
         if(userData.userId !== '-' && roomData.roomId === '-'){
             //get room
             firebase.database().ref(`retrospective`).on('value',async(snapshot)=>{
@@ -150,34 +153,45 @@ function Lobby() {
             //     })
             //     setCategoriesList(listCategory);
             // })
+            
+        }
+        return()=>{
+            firebase.database().ref(`retrospective`).off();
+            firebase.database().ref(`/userRetrospective/${userData.userId}/category`).off();  
+        }
+    },[userData , roomData]);
+    
+    useEffect(()=>{
+        let unsubCategory = () => {};
+        if(userData.userId !== '-'){
             unsubCategory = firebase.firestore().collection('whiteboard').where("userInCategory" , "array-contains" , `${userData.userId}`).orderBy('create').onSnapshot((result)=>{
                 let listCategory = [] as categoryObjectType[];
+                let categoryIdList = [] as string[];
                 result.docs.forEach((doc,index)=>{
-                        if(index===0){
-                            setDefaultCategory(doc.id);
-                        }
                         let categoryObj = {} as categoryObjectType;
                         categoryObj.id = doc.id;
                         categoryObj.name = doc.data().catagories;
                         categoryObj.headOfCategory = doc.data().headOfCategory;
                         listCategory.push(categoryObj)
+
+                        categoryIdList.push(doc.id);
                 })
                 setCategoriesList(listCategory);
+                if(!categoryIdList.includes(selectCategory)){
+                    setSelectCategory(categoryIdList[0]);
+                }
             })
         }
-        return()=>{
-            firebase.database().ref(`retrospective`).off();
-            firebase.database().ref(`/userRetrospective/${userData.userId}/category`).off();
+        return  ()=>{
             unsubCategory();
         }
-    },[userData , roomData]);
-    
-    useEffect(()=>{
-        setSelectCategory(defaultCategoy);
-    },[defaultCategoy])
+    },[userData , selectCategory])
+
+    // useEffect(()=>{
+    //     setSelectCategory(defaultCategoy);
+    // },[defaultCategoy])
 
     useEffect(()=>{
-
         function compareLastOpen( a:roomListType, b:roomListType ) {
             let userIndexOfA = a.userInRoom.findIndex(user=>user.userId === userData.userId);  
             let userIndexOfB = b.userInRoom.findIndex(user=>user.userId === userData.userId);
@@ -236,6 +250,31 @@ function Lobby() {
         return str?.length > n ? str.substr(0,n-1) + "..." : str;
     }
 
+    useEffect(()=>{
+        let unsubCategoryData = firebase.firestore().collection('whiteboard').doc(selectCategory).onSnapshot(async snapshot=>{
+            if(snapshot.exists){
+                let categoryName ='';
+                let headOfCategory = '';
+                let userHavePermission = snapshot.data()?.userAllowAccessAllBoard as string[];
+                await firebase.database().ref(`userRetrospective/${snapshot.data()?.headOfCategory}`).once('value' , snap =>{
+                    if(snap.val()){
+                        headOfCategory = snap.val()?.displayName
+                    }
+                })
+                categoryName = snapshot.data()?.catagories
+                setCategoryObj({
+                    id:selectCategory,
+                    name:categoryName,
+                    headOfCategory:headOfCategory,
+                });
+                setIsPermissionAllowAllBoard(userHavePermission.includes(userData.userId))
+            }
+        })
+        return ()=>{
+            unsubCategoryData();
+        }
+    },[selectCategory , userData])
+
     return (
         <motion.div className="w-full flex flex-col justify-start items-center">
             <div className="w-screen fixed flex justify-center top-0 right-0 items-center h-[100px] z-[40] bg-white">
@@ -250,7 +289,7 @@ function Lobby() {
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#737373]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
-                            <input value={searchText} type="text" className="bg-transparent outline-none w-[136px] md:w-80" placeholder="Search dashboard"
+                            <input value={searchText} type="text" className="bg-transparent outline-none w-[136px] md:w-80" placeholder="Search board"
                                 onChange={(e)=>{
                                     setSearchText(e.target.value);
                                 }}
@@ -294,6 +333,7 @@ function Lobby() {
                             isShowDropdownCategory={isShowDropdownCategory}
                             setIsShowDropdownCategory={setIsShowDropdownCategory}
                             setIsShowRenameCategory={setIsShowRenameCategory}
+                            setCategoryPermissionSelected={setCategoryPermissionSelected}
                         />
                     ))}
                     <motion.div className={`flex justify-center items-center py-3 w-[168px] bg-white hover:bg-secondary-gray-4 text-[#2c60db] duration-200 ease-in rounded-lg cursor-pointer`}
@@ -312,8 +352,18 @@ function Lobby() {
                     </motion.div>
                 </div>
                 <div className="w-full pl-[22px] md:pl-9 lg:pl-24 flex flex-col justify-start items-start">
-                    <div className=" w-full flex justify-around lg:justify-between items-center">
-                        <h2 className="text-[20px] md:text-[30px] font-bold" style={{fontFamily:"'Montserrat', sans-serif"}}>Dashboard</h2>
+                    <div className=" w-full flex justify-between items-center">
+                        <div className="flex flex-col">
+                            <div className="flex gap-2 items-center ">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                                </svg>
+                                <h2 className="text-[18px] md:text-[25px] font-bold" style={{fontFamily:"'Montserrat', sans-serif"}}>Team : {categoryObj.name}</h2>
+                            </div>
+                            
+                            <p className="text-[16px]">Owner : <span className=" text-gray-tab">{categoryObj.headOfCategory}</span></p>
+                        </div>
+                        
                         <div className='flex items-center gap-3'>
                             <img className="w-5 h-5 hidden md:flex" src={'/static/images/whiteboard/filter.png'} alt=""/>
                             <div className='flex items-center border-[1px] border-secondary-gray-3 rounded-md'>
@@ -364,6 +414,7 @@ function Lobby() {
                             </div>
                         </div>
                     </div>
+                    {isPermissionAllowAllBoard ?
                     <div className="w-full grid grid-cols-1 justify-items-center md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-10 mt-8 pb-4">
                             <motion.div key={`roomList${-1}`} className="w-[260px] h-[210px] flex flex-col justify-center items-center rounded-xl drop-shadow-lg bg-[#2c60db] cursor-pointer hover:bg-[#153a62] text-white ease-in duration-200 relative"
                                 animate={{ opacity: 1 , scale:1 }}
@@ -390,7 +441,15 @@ function Lobby() {
                                             selectCategory={selectCategory}
                                         />     
                             ))}
+                    </div>:
+                    <div className="w-full flex flex-col justify-center gap-3 items-center min-h-[300px]">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-24 text-gray-tab">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                        </svg>
+                        <p className="text-[16px] text-gray-tab">{`You don't have permission to access "${categoryObj.name}".`}</p>
+                        <p className="text-[16px] text-gray-tab">{`Please contact "${categoryObj.headOfCategory}".`}</p>
                     </div>
+                    }
                 </div>
                 {/* <div className="text-white font-semibold flex items-center gap-2 rounded-md bg-[#ff355f] hover:bg-[#d62b51] ease-in duration-200 px-3 py-[6px] cursor-pointer drop-shadow-md mb-3" 
                     onClick={()=>{
@@ -486,6 +545,7 @@ function Lobby() {
             <ModalAlert/>
             <ModalConfrimLeaveCategory/>
             <ConfirmDeleteModal/>
+            <PermissionSettingModal categoryPermissionSelected={categoryPermissionSelected} setCategoryPermissionSelected={setCategoryPermissionSelected}/>
             <AnimatePresence>
                 {isCreateRoomClick && 
                     <motion.div className="h-screen w-full fixed top-0 left-0  flex justify-center items-center z-50 bg-blue-dark-op50 "

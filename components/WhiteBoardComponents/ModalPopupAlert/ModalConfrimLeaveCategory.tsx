@@ -42,11 +42,15 @@ function ModalConfrimLeaveCategory() {
                                     if(!isLoading){
                                         setIsLoading(true)
                                         let categoyDoc = await firebase.firestore().collection('whiteboard').doc(leaveCategory.categoryId).get();
-                                        let usersCategoryList = categoyDoc.data()?.userInCategory as string[];
-                                        if(usersCategoryList.includes(userData.userId)){
-                                            await firebase.firestore().collection('whiteboard').doc(leaveCategory.categoryId).update({
-                                                userInCategory:usersCategoryList.filter(id => id !== userData.userId),
-                                            });
+                                        if(categoyDoc.exists){
+                                            let usersCategoryList = categoyDoc.data()?.userInCategory as string[];
+                                            if(usersCategoryList.includes(userData.userId)){
+                                                await firebase.firestore().collection('whiteboard').doc(leaveCategory.categoryId).update({
+                                                    userInCategory:usersCategoryList.filter(id => id !== userData.userId),
+                                                });
+                                                
+                                            }
+                                        }else{
                                             resetLeaveCategory();
                                         }
                                         setIsLoading(false);

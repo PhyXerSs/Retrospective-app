@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Snapshot, useRecoilState, useRecoilValue, useResetRecoilState, useSetRecoilState } from 'recoil'
 import firebase from '../../firebase/firebase-config';
-import { isReUsernameClickState, isShowChangeBackgroundPictureState, isShowChangeProfilePictureState, RectState, selectedIdState, WhiteBoardRoomDataState, whiteBoardUserDataState } from '../../WhiteBoardStateManagement/Atom'
+import { isReUsernameClickState, isShowChangeBackgroundPictureState, isShowChangeProfilePictureState, RectState, selectCategoryState, WhiteBoardRoomDataState, whiteBoardUserDataState } from '../../WhiteBoardStateManagement/Atom'
 import { userInRoomType } from './Lobby';
 import { Transition , Popover } from '@headlessui/react'
 import { useWindowSize } from 'usehooks-ts';
@@ -24,6 +24,8 @@ function UserInRoom({autoGetUrlRoomImage , setIsShareClick}:{autoGetUrlRoomImage
     const isReUsernameClick = useRecoilValue(isReUsernameClickState);
     const [isShowChangeProfilePicture, setIsShowChangeProfilePicture] =useRecoilState(isShowChangeProfilePictureState);
     const [isShowChangeBackgroundPicture , setIsShowChangeBackgroundPicture] = useRecoilState(isShowChangeBackgroundPictureState);
+    const [ categoryOfThisRoom , setCategoryOfThisRoom ] = useState<string>('-');
+    const setSelectCategory  = useSetRecoilState(selectCategoryState);
     useEffect(()=>{
         firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/userInRoom`).on('value',snapshot=>{
             if(snapshot.val()!==null){
@@ -88,6 +90,9 @@ function UserInRoom({autoGetUrlRoomImage , setIsShareClick}:{autoGetUrlRoomImage
                 if(inputRef.current){
                     inputRef.current.value = snapshot.val()?.roomName;
                 }
+                let category = snapshot.val()?.catagories;
+                setCategoryOfThisRoom(category);
+                setSelectCategory(category);
             }
         })
         return()=>{
@@ -155,29 +160,48 @@ function UserInRoom({autoGetUrlRoomImage , setIsShareClick}:{autoGetUrlRoomImage
         }
     }
 
+    async function leaveRoom() {
+        let uri = autoGetUrlRoomImage();
+        await Promise.all([
+            firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/userInRoom/${userData.userId}`).update({
+                isOnline:false
+            }),
+            firebase.database().ref(`userRetrospective/${userData.userId}`).update({
+                lastActive: new Date().valueOf(),
+                statusOnline:false
+            }),
+            firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/`).update({
+                roomImage: uri,
+            })
+        ])
+        resetRects();
+        resetRoomData();
+    }
+
+    useEffect(()=>{
+        let unsubCategoryData = ()=>{};
+        if(categoryOfThisRoom !== '-' && userData.userId !== '-' && roomData.roomId !== '-'){
+            unsubCategoryData = firebase.firestore().collection('whiteboard').doc(categoryOfThisRoom).onSnapshot(async snapshot=>{
+                if(snapshot.exists){
+                    let userHavePermission = snapshot.data()?.userAllowAccessAllBoard as string[];
+                    //if not have permission => kick
+                    if(!userHavePermission.includes(userData.userId)){
+                        leaveRoom();
+                    }
+                }
+            })
+        }
+        return ()=>{
+            unsubCategoryData();
+        }
+    },[categoryOfThisRoom , userData , roomData])
+
     return (
         <>
             <div className="absolute top-[10px] w-11/12 p-1 md:p-4  flex items-center justify-between h-[75px] bg-white rounded-lg drop-shadow-xl z-[40]">
                 <div className="flex gap-2 md:gap-3 lg:gap-5 justify-start items-center ml-2">
                     <div className="cursor-pointer"
-                        onClick={async()=>{
-                            // handleSelectShape(selectedId , null);
-                            let uri = autoGetUrlRoomImage();
-                            await Promise.all([
-                                firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/userInRoom/${userData.userId}`).update({
-                                    isOnline:false
-                                }),
-                                firebase.database().ref(`userRetrospective/${userData.userId}`).update({
-                                    lastActive: new Date().valueOf(),
-                                    statusOnline:false
-                                }),
-                                firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/`).update({
-                                    roomImage: uri,
-                                })
-                            ])
-                            resetRects();
-                            resetRoomData();
-                        }}
+                        onClick={leaveRoom}
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-11 w-11 text-white ease-in duration-200 rounded-full bg-[#1363df] hover:bg-[#153a62] p-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />

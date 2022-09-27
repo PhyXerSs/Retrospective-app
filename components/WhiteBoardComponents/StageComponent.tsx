@@ -99,10 +99,11 @@ function StageComponent() {
             }
         })
 
+        
+
         return ()=>{
             firebase.database().ref(`retrospective/${roomData.roomId}/shape`).off();
             firebase.database().ref(`retrospective/${roomData.roomId}`).off();
-            
         }
     },[userData,roomData])
 

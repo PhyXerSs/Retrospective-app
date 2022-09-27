@@ -11,9 +11,10 @@ interface props{
     isShowDropdownCategory:number;
     setIsShowDropdownCategory:React.Dispatch<React.SetStateAction<number>>
     setIsShowRenameCategory:React.Dispatch<React.SetStateAction<string>>
+    setCategoryPermissionSelected:React.Dispatch<React.SetStateAction<string>>
 }
 
-function ModalCategorySelect({index,category , isShowDropdownCategory , setIsShowDropdownCategory , setIsShowRenameCategory} : props) {
+function ModalCategorySelect({index,category , isShowDropdownCategory , setIsShowDropdownCategory , setIsShowRenameCategory , setCategoryPermissionSelected} : props) {
     const [ selectCategory , setSelectCategory ] = useRecoilState(selectCategoryState);
     const setIsShowDeleteConfirm = useSetRecoilState(isShowDeleteConfirmState);
     const [ userData , setUserData ] = useRecoilState(whiteBoardUserDataState);
@@ -64,6 +65,15 @@ function ModalCategorySelect({index,category , isShowDropdownCategory , setIsSho
                                     }}
                                 >
                                     <p>Rename</p>
+                                </Popover.Button>}
+                                {category.headOfCategory === userData.userId &&
+                                <Popover.Button className="flex justify-start py-4 px-8 items-center w-full bg-white  rounded-t-md cursor-pointer duration-150 ease-in hover:bg-[#e8f3ff] gap-2 border-b-[1px] border-b-secondary-gray-4"
+                                    onClick={async(e:any)=>{
+                                        e.stopPropagation();
+                                        setCategoryPermissionSelected(category.id)
+                                    }}
+                                >
+                                    <p>Permission</p>
                                 </Popover.Button>}
                                 {category.headOfCategory === userData.userId ?
                                 <Popover.Button className="flex justify-start py-4 px-8 items-center w-full bg-white rounded-b-md cursor-pointer duration-150 ease-in hover:bg-[#e8f3ff] gap-2"
