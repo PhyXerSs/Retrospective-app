@@ -176,3 +176,8 @@ export const isPermissionAllowAllBoardStage = atom({
     key:'is_Permission_Allow_All_Board_Stage',
     default: false as boolean
 })
+
+export const showFullImageState = atom({
+    key: 'show_Full_Image',
+    default: '-' as string,
+})

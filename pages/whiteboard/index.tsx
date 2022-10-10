@@ -7,6 +7,8 @@ import Sidebar from '../../components/WhiteBoardComponents/Sidebar';
 import CreateRoom from '../../components/WhiteBoardComponents/CreateRoom';
 import { WhiteBoardRoomDataState, whiteBoardUserDataState } from '../../WhiteBoardStateManagement/Atom';
 import LoginSignUp from '../../components/WhiteBoardComponents/LoginSignUp';
+import RoomChat from '../../components/WhiteBoardComponents/RoomChat';
+import FullChatImage from '../../components/WhiteBoardComponents/FullChatImage';
 const StageComponent = dynamic(() => import("../../components/WhiteBoardComponents/StageComponent"), {
   ssr: false,
 });
@@ -20,7 +22,11 @@ function WhiteBoardApp(){
         <>
         {/* <Navbar/> */}
         {/* <Sidebar/> */}
-        <StageComponent/>
+        <div className="w-full h-full">
+          <StageComponent/>
+          <RoomChat/>
+          <FullChatImage/>
+        </div>
         </>
       }
     </>

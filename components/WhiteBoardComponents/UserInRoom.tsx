@@ -66,7 +66,7 @@ function UserInRoom({autoGetUrlRoomImage , setIsShareClick}:{autoGetUrlRoomImage
             firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/userInRoom/${userData.userId}`).onDisconnect().cancel();
             firebase.database().ref(`userRetrospective/${userData.userId}`).onDisconnect().cancel();
         }
-    },[roomData , userData])
+    },[roomData.roomId , userData])
 
     useEffect(()=>{
         let userListSorted = userInRoom.filter((user)=>user.isOnline);
@@ -194,7 +194,7 @@ function UserInRoom({autoGetUrlRoomImage , setIsShareClick}:{autoGetUrlRoomImage
         return ()=>{
             unsubCategoryData();
         }
-    },[categoryOfThisRoom , userData , roomData])
+    },[categoryOfThisRoom , userData , roomData.roomId])
 
     return (
         <>

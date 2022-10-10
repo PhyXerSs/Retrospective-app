@@ -14,6 +14,8 @@ import { fontSize } from '@mui/system';
 import Toolbar from './Toolbar';
 import ShareModal from './ShareModal';
 import * as firebaseServer from 'firebase';
+import RoomChat from './RoomChat';
+import FullChatImage from './FullChatImage';
 function StageComponent() {
     const [ rects , setRects ] = useRecoilState(RectState);
     const [ stageX , setStageX] = useState<number>(0);
@@ -695,6 +697,7 @@ function StageComponent() {
                 </Layer>
             </Stage>
             <Toolbar handleSaveImage={handleSaveImage} autoGetUrlRoomImage={autoGetUrlRoomImage}/>
+            
          </div>
     )
 }

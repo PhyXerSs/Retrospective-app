@@ -67,7 +67,18 @@ function ConfirmDeleteModal() {
                                         }else{
                                             setIsLoading(true)
                                             try{
-                                                // await deleteRoom(isShowConfirmDelete.categoryName,isShowConfirmDelete.roomId);
+                                                //delete chat room
+                                                await firebase.firestore().collection('RoomChat').doc(isShowConfirmDelete.roomId).collection('chat').get()
+                                                .then(snap => {
+                                                    snap.forEach(docs => {
+                                                        try {
+                                                            firebase.firestore().collection('RoomChat').doc(isShowConfirmDelete.roomId).collection('chat').doc(docs.id)
+                                                            .delete();
+                                                        } catch (err) {
+                                                        console.log(err);
+                                                        }
+                                                    });
+                                                });
                                                 firebase.database().ref(`retrospective/${isShowConfirmDelete.roomId}`).remove();
                                                 resetIsShowConfirmDelete();
                                             }catch(err){
