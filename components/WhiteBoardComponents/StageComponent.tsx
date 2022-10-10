@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Stage, Layer, Star, Text ,Rect ,Group  } from 'react-konva';
+import { Stage, Layer, Star, Text ,Rect ,Group , Line  } from 'react-konva';
 import { useRecoilState, useRecoilValue, useResetRecoilState } from 'recoil';
-import { dragedRectTypeState, isExpandedSideBarState, isShowTextAreaState, oldSelectedIdState, RectState, RectStateType, selectedIdState, WhiteBoardRoomDataState, whiteBoardUserDataState, whiteBoardUserDataStateType } from '../../WhiteBoardStateManagement/Atom';
+import { dragedRectTypeState, DrawState, isDrawSelectedState, isEraserSelectedState, isExpandedSideBarState, isShowTextAreaState, oldSelectedIdState, RectState, RectStateType, selectedIdState, WhiteBoardRoomDataState, whiteBoardUserDataState, whiteBoardUserDataStateType } from '../../WhiteBoardStateManagement/Atom';
 import ScrollContainer from 'react-indiana-drag-scroll'
 import ModalPostIt from './ModalPostIt';
 import { v4 as uuid } from 'uuid';
@@ -18,6 +18,8 @@ import RoomChat from './RoomChat';
 import FullChatImage from './FullChatImage';
 function StageComponent() {
     const [ rects , setRects ] = useRecoilState(RectState);
+    // const [ lines , setLines ] = useRecoilState(DrawState);
+    const [lines, setLines] = useState<any[]>([]);
     const [ stageX , setStageX] = useState<number>(0);
     const [ stageY , setStageY] = useState<number>(0);
     const [ stageScale , setStageScale ] = useState<number>(1);
@@ -37,6 +39,9 @@ function StageComponent() {
     const resetRoomData = useResetRecoilState(WhiteBoardRoomDataState);
     const [ showTextArea , setShowTextArea ] = useRecoilState(isShowTextAreaState);
     const [ isShareClick , setIsShareClick ] = useState<boolean>(false);
+    const [ isDrawSelected , setIsDrawSelected ] = useRecoilState(isDrawSelectedState);
+    const [ isEraserSelected , setIsEraserSelected ] = useRecoilState(isEraserSelectedState);
+    const isDrawing = useRef(false);
     useEffect(()=>{
         focusRect();
     },[]);
@@ -100,8 +105,6 @@ function StageComponent() {
                 setRects([]);
             }
         })
-
-        
 
         return ()=>{
             firebase.database().ref(`retrospective/${roomData.roomId}/shape`).off();
@@ -447,6 +450,50 @@ function StageComponent() {
         }
     }
 
+    const handleMouseDown = (e:any) => {
+        console.log(e);
+        
+        if(isDrawSelected || isEraserSelected){
+            isDrawing.current = true;
+        }else{
+            isDrawing.current = false;
+        }
+        let idRect = uuid();
+        const pos = e.target.getStage().getPointerPosition();
+        if(isDrawSelected){
+            // setLines([...lines, {
+            //     lineId:`${idRect}`,
+            //     color:'rgb(32 118 210 / var(--tw-border-opacity))' , 
+            //     type:'pen', 
+            //     positionX:pos.x , 
+            //     positionY:pos.Y
+            // }]);
+            setLines([...lines, { tool:'pen', points: [(pos.x - stageRef.current.attrs.x)/stageScale, (pos.y - stageRef.current.attrs.y)/stageScale] }]);
+        }
+        
+    };
+    
+    const handleMouseMove = (e:any) => {
+        // no drawing - skipping
+        if (!isDrawing.current) {
+            return;
+        }
+        const stage = e.target.getStage();
+        const point = stage.getPointerPosition();
+        let lastLine = lines[lines.length - 1];
+        // add point
+        // if(lines.length > 0)
+        lastLine.points = lastLine.points.concat([(point.x - stageRef.current.attrs.x)/stageScale, (point.y - stageRef.current.attrs.y)/stageScale]);
+    
+        // replace last
+        lines.splice(lines.length - 1, 1, lastLine);
+        setLines(lines.concat());
+    };
+
+    const handleMouseUp = () => {
+        isDrawing.current = false;
+      };
+
     const checkDeselect = (e:any) => {
         const clickedOnEmpty = e.target === e.target.getStage();
         if (clickedOnEmpty) {
@@ -636,6 +683,7 @@ function StageComponent() {
         >
             <UserInRoom autoGetUrlRoomImage={autoGetUrlRoomImage} setIsShareClick={setIsShareClick}/>
             <ShareModal isShareClick={isShareClick} setIsShareClick={setIsShareClick}/>
+            
             <Stage className={`bg-[#f2f2f2] w-[${stageWidth}px] h-[${stageHeight}px] overflow-clip`}
                 ref={stageRef}
                 x={stageX}
@@ -645,9 +693,11 @@ function StageComponent() {
                 width={stageWidth}
                 height={stageHeight}
                 onWheel={handleWheel}
-                draggable={true}
+                draggable={!isDrawSelected && !isEraserSelected}
                 dragBoundFunc={(pos:{x:number , y : number})=>boundFunc(pos , stageScale)}
-                onMouseDown={checkDeselect}
+                onMouseDown={(e:any)=>{checkDeselect(e);handleMouseDown(e)}}
+                onMouseMove={handleMouseMove}
+                onMouseup={handleMouseUp}
                 onTouchStart={checkDeselect}
             > 
                 <Layer>
@@ -694,6 +744,20 @@ function StageComponent() {
                                 />
                         ))
                     }
+                    {lines.map((line, i) => (
+                        <Line
+                            key={`lines${i}`}
+                            points={line.points}
+                            stroke="#df4b26"
+                            strokeWidth={5}
+                            tension={0.5}
+                            lineCap="round"
+                            lineJoin="round"
+                            globalCompositeOperation={
+                                line.tool === 'eraser' ? 'destination-out' : 'source-over'
+                            }
+                        />
+                    ))}
                 </Layer>
             </Stage>
             <Toolbar handleSaveImage={handleSaveImage} autoGetUrlRoomImage={autoGetUrlRoomImage}/>

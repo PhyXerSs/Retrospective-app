@@ -28,6 +28,21 @@ export const RectState = atom({
     dangerouslyAllowMutability:true,
 })
 
+export interface DrawStateType{
+    lineId:string,
+    color:string,
+    type:string,
+    positionX:number,
+    positionY:number,
+}
+
+export const DrawState = atom({
+    key:'Draw_State',
+    default:[] as DrawStateType[],
+    dangerouslyAllowMutability:true,
+})
+
+
 export interface whiteBoardUserDataStateType{
     userId:string,
     userName:string,
@@ -180,4 +195,14 @@ export const isPermissionAllowAllBoardStage = atom({
 export const showFullImageState = atom({
     key: 'show_Full_Image',
     default: '-' as string,
+})
+
+export const isDrawSelectedState = atom({
+    key:'is_Draw_Selected_State',
+    default:false as boolean
+})
+
+export const isEraserSelectedState = atom({
+    key:'is_Eraser_Selected_State',
+    default:false as boolean
 })

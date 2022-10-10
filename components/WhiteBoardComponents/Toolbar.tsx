@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Transition , Popover } from '@headlessui/react'
 import { useRecoilState, useResetRecoilState, useSetRecoilState } from 'recoil';
-import { dragedRectTypeState, RectState, selectedIdState, WhiteBoardRoomDataState, whiteBoardUserDataState } from '../../WhiteBoardStateManagement/Atom';
+import { dragedRectTypeState, RectState, selectedIdState, WhiteBoardRoomDataState, whiteBoardUserDataState , isDrawSelectedState , isEraserSelectedState } from '../../WhiteBoardStateManagement/Atom';
 import firebase from '../../firebase/firebase-config';
 // import firebase from '../../firebase/firebaseConfig';
 import { v4 as uuid } from 'uuid';
@@ -9,6 +9,7 @@ import TextFieldsIcon from '@mui/icons-material/TextFields';
 import Resizer from "react-image-file-resizer";
 import * as firebaseServer from 'firebase';
 import { CSVLink } from "react-csv";
+import AutoFixNormalIcon from '@mui/icons-material/AutoFixNormal';
 export interface stickyNoteMetaType{
     type:string,
     bgColor:string,
@@ -42,6 +43,8 @@ function Toolbar({handleSaveImage , autoGetUrlRoomImage}:{handleSaveImage:any , 
     const resetRoomData = useResetRecoilState(WhiteBoardRoomDataState);
     const inputFileRef = useRef<HTMLInputElement>(null);
     const [csvData , setCSVData] = useState<csvDataType[]>([]);
+    const [ isDrawSelected , setIsDrawSelected ] = useRecoilState(isDrawSelectedState);
+    const [ isEraserSelected , setIsEraserSelected ] = useRecoilState(isEraserSelectedState);
     const stickyNoteMeta : stickyNoteMetaType[] =[
         // {
         //     type:'try',
@@ -439,7 +442,7 @@ function Toolbar({handleSaveImage , autoGetUrlRoomImage}:{handleSaveImage:any , 
                             leaveFrom="transform scale-100 opacity-100"
                             leaveTo="transform scale-95 opacity-0"
                             >
-                                <Popover.Panel className="flex justify-center items-center p-4 absolute -top-32 -left-[58px] rounded-xl bg-white" style={{boxShadow: 'rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px'}}>
+                                <Popover.Panel className="flex justify-center items-center gap-2 p-4 absolute -top-32 -left-[58px] rounded-xl bg-white" style={{boxShadow: 'rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px'}}>
                                     <Popover.Button className="flex p-3 border-[2px] border-secondary-gray-3 hover:border-secondary-gray-1 ease-in duration-200 cursor-pointer"
                                         draggable
                                         ref={dragRef}
@@ -481,6 +484,84 @@ function Toolbar({handleSaveImage , autoGetUrlRoomImage}:{handleSaveImage:any , 
                                     >
                                         <TextFieldsIcon style={{fontSize:20}}/>
                                     </Popover.Button>
+                                    <div className={`flex p-3 border-[2px] ${isDrawSelected ? ' border-blue hover:border-blue' :'border-secondary-gray-3 hover:border-secondary-gray-1'}  ease-in duration-200 cursor-pointer`}
+                                        onClick={async()=>{
+                                            if(isEraserSelected){
+                                                setIsEraserSelected(false)
+                                            }             
+                                            setIsDrawSelected(!isDrawSelected)
+                                            // let idRect = uuid();
+                                            // handleSelectShape(selectedId , null);
+                                            // let uri = autoGetUrlRoomImage();
+                                            // await Promise.all([
+                                            //     firebase.database().ref(`retrospective/${roomData.roomId}/shape/${idRect}`).set({
+                                            //         rectId:`${idRect}`,
+                                            //         model:'textfield',
+                                            //         selectedByUserId:userData.userId,
+                                            //         selectedByUsername:userData.userName,
+                                            //         message:'',
+                                            //         type:'textfield',
+                                            //         positionX:-640+rects.length*10%640,
+                                            //         positionY:-440+rects.length*10%440,
+                                            //         scaleX : 1,
+                                            //         scaleY : 1,
+                                            //         rotation : 0,
+                                            //         positionWordX : 50,
+                                            //         positionWordY : 50,
+                                            //         adaptiveFontSize: 12,
+                                            //         imageUrl:'',
+                                            //         isDragging : false,
+                                            //     }),
+                                            //     firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/`).update({
+                                            //         roomImage: uri,
+                                            //         lastModified:firebaseServer.database.ServerValue.TIMESTAMP,
+                                            //     })
+                                            // ])
+                                        }}
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-5 h-5 ${isDrawSelected ? "text-blue" : '' } `}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                                        </svg>
+
+                                    </div>
+                                    <div className={`flex p-3 border-[2px] ${isEraserSelected ? ' border-blue hover:border-blue' :'border-secondary-gray-3 hover:border-secondary-gray-1'}  ease-in duration-200 cursor-pointer`}
+                                        onClick={async()=>{
+                                            if(isDrawSelected){
+                                                setIsDrawSelected(false);
+                                            }
+                                            setIsEraserSelected(!isEraserSelected)
+                                            // let idRect = uuid();
+                                            // handleSelectShape(selectedId , null);
+                                            // let uri = autoGetUrlRoomImage();
+                                            // await Promise.all([
+                                            //     firebase.database().ref(`retrospective/${roomData.roomId}/shape/${idRect}`).set({
+                                            //         rectId:`${idRect}`,
+                                            //         model:'textfield',
+                                            //         selectedByUserId:userData.userId,
+                                            //         selectedByUsername:userData.userName,
+                                            //         message:'',
+                                            //         type:'textfield',
+                                            //         positionX:-640+rects.length*10%640,
+                                            //         positionY:-440+rects.length*10%440,
+                                            //         scaleX : 1,
+                                            //         scaleY : 1,
+                                            //         rotation : 0,
+                                            //         positionWordX : 50,
+                                            //         positionWordY : 50,
+                                            //         adaptiveFontSize: 12,
+                                            //         imageUrl:'',
+                                            //         isDragging : false,
+                                            //     }),
+                                            //     firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/`).update({
+                                            //         roomImage: uri,
+                                            //         lastModified:firebaseServer.database.ServerValue.TIMESTAMP,
+                                            //     })
+                                            // ])
+                                        }}
+                                    >
+                                        <AutoFixNormalIcon style={{fontSize:20, color: isEraserSelected ?'rgb(32 118 210 / var(--tw-border-opacity))' : '', }} />
+
+                                    </div>
                                 </Popover.Panel>
                             </Transition>
                         </>
