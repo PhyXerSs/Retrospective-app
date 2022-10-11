@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Snapshot, useRecoilState, useRecoilValue, useResetRecoilState, useSetRecoilState } from 'recoil'
 import firebase from '../../firebase/firebase-config';
-import { isReUsernameClickState, isShowChangeBackgroundPictureState, isShowChangeProfilePictureState, RectState, selectCategoryState, WhiteBoardRoomDataState, whiteBoardUserDataState } from '../../WhiteBoardStateManagement/Atom'
+import { isDrawSelectedState, isEraserSelectedState, isReUsernameClickState, isShowChangeBackgroundPictureState, isShowChangeProfilePictureState, RectState, selectCategoryState, WhiteBoardRoomDataState, whiteBoardUserDataState } from '../../WhiteBoardStateManagement/Atom'
 import { userInRoomType } from './Lobby';
 import { Transition , Popover } from '@headlessui/react'
 import { useWindowSize } from 'usehooks-ts';
@@ -25,7 +25,9 @@ function UserInRoom({autoGetUrlRoomImage , setIsShareClick}:{autoGetUrlRoomImage
     const [isShowChangeProfilePicture, setIsShowChangeProfilePicture] =useRecoilState(isShowChangeProfilePictureState);
     const [isShowChangeBackgroundPicture , setIsShowChangeBackgroundPicture] = useRecoilState(isShowChangeBackgroundPictureState);
     const [ categoryOfThisRoom , setCategoryOfThisRoom ] = useState<string>('-');
-    const setSelectCategory  = useSetRecoilState(selectCategoryState);
+    const setSelectCategory  = useSetRecoilState(selectCategoryState)
+    const resetIsDrawSelected = useResetRecoilState(isDrawSelectedState);
+    const resetIsEraserSelected = useResetRecoilState(isEraserSelectedState);
     useEffect(()=>{
         firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/userInRoom`).on('value',snapshot=>{
             if(snapshot.val()!==null){
@@ -176,6 +178,8 @@ function UserInRoom({autoGetUrlRoomImage , setIsShareClick}:{autoGetUrlRoomImage
         ])
         resetRects();
         resetRoomData();
+        resetIsDrawSelected();
+        resetIsEraserSelected();
     }
 
     useEffect(()=>{

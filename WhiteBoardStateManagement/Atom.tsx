@@ -30,10 +30,8 @@ export const RectState = atom({
 
 export interface DrawStateType{
     lineId:string,
-    color:string,
-    type:string,
-    positionX:number,
-    positionY:number,
+    tool:string,
+    points:number[]
 }
 
 export const DrawState = atom({

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Stage, Layer, Star, Text ,Rect ,Group , Line  } from 'react-konva';
 import { useRecoilState, useRecoilValue, useResetRecoilState } from 'recoil';
-import { dragedRectTypeState, DrawState, isDrawSelectedState, isEraserSelectedState, isExpandedSideBarState, isShowTextAreaState, oldSelectedIdState, RectState, RectStateType, selectedIdState, WhiteBoardRoomDataState, whiteBoardUserDataState, whiteBoardUserDataStateType } from '../../WhiteBoardStateManagement/Atom';
+import { dragedRectTypeState, DrawState, DrawStateType, isDrawSelectedState, isEraserSelectedState, isExpandedSideBarState, isShowTextAreaState, oldSelectedIdState, RectState, RectStateType, selectedIdState, WhiteBoardRoomDataState, whiteBoardUserDataState, whiteBoardUserDataStateType } from '../../WhiteBoardStateManagement/Atom';
 import ScrollContainer from 'react-indiana-drag-scroll'
 import ModalPostIt from './ModalPostIt';
 import { v4 as uuid } from 'uuid';
@@ -20,6 +20,8 @@ function StageComponent() {
     const [ rects , setRects ] = useRecoilState(RectState);
     // const [ lines , setLines ] = useRecoilState(DrawState);
     const [lines, setLines] = useState<any[]>([]);
+    const [ linesOnDrawnId , setLinesOnDrawId ] = useState<string>('-');
+    const [ eraserLinesOnMoveId , setEraserLinesOnMoveId ] = useState<string>('-')
     const [ stageX , setStageX] = useState<number>(0);
     const [ stageY , setStageY] = useState<number>(0);
     const [ stageScale , setStageScale ] = useState<number>(1);
@@ -106,11 +108,32 @@ function StageComponent() {
             }
         })
 
+        firebase.database().ref(`retrospective/${roomData.roomId}/lines`).on('value',async(snapshot)=>{
+            if(snapshot.val() !== null){
+                let allLines = snapshot.val()
+                let newLines = [] as DrawStateType[];
+                for(let id in allLines){
+                    if (allLines.hasOwnProperty(id)) {
+                        let linesAttr = allLines[id] as DrawStateType;
+                        let newLine = {} as DrawStateType;
+                        newLine.lineId = id;
+                        newLine.tool = linesAttr.tool;
+                        newLine.points = linesAttr.points;
+                        newLines.push(newLine)
+                    }
+                }
+                setLines(newLines);
+            }else{
+                setLines([]);
+            }
+        })
+
         return ()=>{
             firebase.database().ref(`retrospective/${roomData.roomId}/shape`).off();
             firebase.database().ref(`retrospective/${roomData.roomId}`).off();
+            firebase.database().ref(`retrospective/${roomData.roomId}/lines`).off();
         }
-    },[userData,roomData])
+    },[userData,roomData.roomId])
 
     function autoGetUrlRoomImage(){
         stageRef.current.scaleX(1.25);
@@ -450,47 +473,66 @@ function StageComponent() {
         }
     }
 
-    const handleMouseDown = (e:any) => {
-        console.log(e);
-        
+    const handleMouseDown = async(e:any) => {
         if(isDrawSelected || isEraserSelected){
             isDrawing.current = true;
         }else{
             isDrawing.current = false;
         }
-        let idRect = uuid();
         const pos = e.target.getStage().getPointerPosition();
         if(isDrawSelected){
-            // setLines([...lines, {
-            //     lineId:`${idRect}`,
-            //     color:'rgb(32 118 210 / var(--tw-border-opacity))' , 
-            //     type:'pen', 
-            //     positionX:pos.x , 
-            //     positionY:pos.Y
-            // }]);
-            setLines([...lines, { tool:'pen', points: [(pos.x - stageRef.current.attrs.x)/stageScale, (pos.y - stageRef.current.attrs.y)/stageScale] }]);
+            let idRect = uuid();
+            setLinesOnDrawId(idRect);
+            firebase.database().ref(`retrospective/${roomData.roomId}/lines/${idRect}`).set({
+                tool:'pen',
+                points: [(pos.x - stageRef.current.attrs.x)/stageScale, (pos.y - stageRef.current.attrs.y)/stageScale]
+            })
+            // setLines([...lines, { tool:'pen', points: [(pos.x - stageRef.current.attrs.x)/stageScale, (pos.y - stageRef.current.attrs.y)/stageScale] }]);
+        }else if(isEraserSelected){
+            let idRect = uuid();
+            setEraserLinesOnMoveId(idRect);
+            // setLinesOnDrawId(idRect);
+            // firebase.database().ref(`retrospective/${roomData.roomId}/lines/${idRect}`).set({
+            //     tool:'eraser',
+            //     points: [(pos.x - stageRef.current.attrs.x)/stageScale, (pos.y - stageRef.current.attrs.y)/stageScale]
+            // })
         }
         
     };
     
-    const handleMouseMove = (e:any) => {
+    const handleMouseMove = async(e:any) => {
         // no drawing - skipping
         if (!isDrawing.current) {
             return;
         }
         const stage = e.target.getStage();
         const point = stage.getPointerPosition();
-        let lastLine = lines[lines.length - 1];
+        if(linesOnDrawnId !== '-' && eraserLinesOnMoveId === '-'){
+            firebase.database().ref(`retrospective/${roomData.roomId}/lines/${linesOnDrawnId}`).once('value' ,async snapshot=>{
+                if(snapshot.val()){
+                    let lastLine = snapshot.val();
+                    lastLine.points = lastLine.points.concat([(point.x - stageRef.current.attrs.x)/stageScale, (point.y - stageRef.current.attrs.y)/stageScale]);
+                    firebase.database().ref(`retrospective/${roomData.roomId}/lines/${linesOnDrawnId}`).update({
+                        points:lastLine.points 
+                    })
+                    // console.log(snapshot.val());
+                }
+            })
+        }
+        // let lastLine = lines[lines.length - 1];
         // add point
         // if(lines.length > 0)
-        lastLine.points = lastLine.points.concat([(point.x - stageRef.current.attrs.x)/stageScale, (point.y - stageRef.current.attrs.y)/stageScale]);
-    
+        // lastLine.points = lastLine.points.concat([(point.x - stageRef.current.attrs.x)/stageScale, (point.y - stageRef.current.attrs.y)/stageScale]);
+        
         // replace last
-        lines.splice(lines.length - 1, 1, lastLine);
-        setLines(lines.concat());
+        // lines.splice(lines.length - 1, 1, lastLine);
+        // setLines(lines.concat());
     };
-
+    // console.log(lines);
+    
     const handleMouseUp = () => {
+        setLinesOnDrawId('-');
+        setEraserLinesOnMoveId('-');
         isDrawing.current = false;
       };
 
@@ -746,7 +788,7 @@ function StageComponent() {
                     }
                     {lines.map((line, i) => (
                         <Line
-                            key={`lines${i}`}
+                            key={`lines${line.lineId}`}
                             points={line.points}
                             stroke="#df4b26"
                             strokeWidth={5}
@@ -756,6 +798,16 @@ function StageComponent() {
                             globalCompositeOperation={
                                 line.tool === 'eraser' ? 'destination-out' : 'source-over'
                             }
+                            onMouseMove={async(e:any)=>{
+                                if(eraserLinesOnMoveId !== '-'){
+                                    await firebase.database().ref(`retrospective/${roomData.roomId}/lines/${line.lineId}`).remove();
+                                    // firebase.database().ref(`retrospective/${roomData.roomId}/lines/${line.lineId}`).once('value' , snapshot=>{
+                                    //     if(snapshot.val()){
+                                    //         firebase.database().ref(`retrospective/${roomData.roomId}/lines/${line.lineId}`).remove();
+                                    //     }
+                                    // });
+                                }
+                            }}
                         />
                     ))}
                 </Layer>
