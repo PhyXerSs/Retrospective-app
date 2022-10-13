@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Transition , Popover } from '@headlessui/react'
 import { useRecoilState, useResetRecoilState, useSetRecoilState } from 'recoil';
-import { dragedRectTypeState, RectState, selectedIdState, WhiteBoardRoomDataState, whiteBoardUserDataState , isDrawSelectedState , isEraserSelectedState } from '../../WhiteBoardStateManagement/Atom';
+import { dragedRectTypeState, RectState, selectedIdState, WhiteBoardRoomDataState, whiteBoardUserDataState , isDrawSelectedState , isEraserSelectedState , drawSettingState } from '../../WhiteBoardStateManagement/Atom';
 import firebase from '../../firebase/firebase-config';
 // import firebase from '../../firebase/firebaseConfig';
 import { v4 as uuid } from 'uuid';
@@ -10,6 +10,7 @@ import Resizer from "react-image-file-resizer";
 import * as firebaseServer from 'firebase';
 import { CSVLink } from "react-csv";
 import AutoFixNormalIcon from '@mui/icons-material/AutoFixNormal';
+import GestureIcon from '@mui/icons-material/Gesture';
 export interface stickyNoteMetaType{
     type:string,
     bgColor:string,
@@ -45,6 +46,7 @@ function Toolbar({handleSaveImage , autoGetUrlRoomImage}:{handleSaveImage:any , 
     const [csvData , setCSVData] = useState<csvDataType[]>([]);
     const [ isDrawSelected , setIsDrawSelected ] = useRecoilState(isDrawSelectedState);
     const [ isEraserSelected , setIsEraserSelected ] = useRecoilState(isEraserSelectedState);
+    const [ drawSetting , setDrawSetting ] = useRecoilState(drawSettingState);
     const stickyNoteMeta : stickyNoteMetaType[] =[
         // {
         //     type:'try',
@@ -188,6 +190,8 @@ function Toolbar({handleSaveImage , autoGetUrlRoomImage}:{handleSaveImage:any , 
             positionInCatelogue:'top-0 left-[60px]'
         },
     ]
+
+    const drawColors = ['#083AA9' , '#D2001A' , '#f9523e' ,'#40a88e' , '#a151d8' ,'#000000'  ]
 
     function formatGridSquareShape(){
         
@@ -428,6 +432,73 @@ function Toolbar({handleSaveImage , autoGetUrlRoomImage}:{handleSaveImage:any , 
     return (
         <div className="fixed bottom-10 z-[40] flex justify-start items-center w-full min-w-[500px] max-w-[700px] bg-white rounded-xl h-20 " style={{boxShadow: 'rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px'}}>
             <div className="flex w-full h-full justify-start items-center">
+                { (isDrawSelected || isEraserSelected) ? 
+                <>
+                    <div className='w-full min-w-[400px] max-w-[560px] flex justify-start items-center gap-0 sm:gap-5'>
+                        <div className="flex flex-1 flex-col justify-center items-center relative gap-1 pl-0 sm:pl-2">
+                            <div className="flex w-36 sm:w-56 justify-between items-center">
+                                <p className="text-secondary-gray-2">size</p>
+                                <p className="text-secondary-gray-2">
+                                    {drawSetting.size}
+                                </p>
+                            </div>
+                            <input
+                                type="range"
+                                value={drawSetting.size}
+                                min={3}
+                                max={8}
+                                step={1}
+                                aria-labelledby="Zoom"
+                                onChange={(e) => {
+                                    setDrawSetting({
+                                        ...drawSetting,
+                                        size:Number(e.target.value)
+                                    })
+                                }}
+                                className={`w-36 sm:w-56 bg-[#000000] `}
+                                />
+                        </div>
+                        <div className="flex w-[200px] justify-center items-center relative gap-[6px] sm:gap-[8px]">
+                            {drawColors.map((color,index)=>(
+                                <div key={`drawColorKey${index}`} className={`w-7 h-7 drop-shadow-md hover:scale-125 ease-in duration-200 cursor-pointer rounded-full ${drawSetting.color === color && isDrawSelected ? 'scale-125' : 'scale-100'}`} style={{backgroundColor:color}}
+                                    onClick={()=>{
+                                        if(isEraserSelected){
+                                            setIsEraserSelected(false)
+                                        }             
+                                        setIsDrawSelected(true)
+                                        setDrawSetting({
+                                            ...drawSetting,
+                                            color:color
+                                        })
+                                    }}
+                                >
+                                </div>
+                            ))}
+                        </div>
+                        <div className={`flex p-3 border-[2px] ${isEraserSelected ? ' border-blue hover:border-blue' :'border-secondary-gray-3 hover:border-secondary-gray-1'} rounded-full  ease-in duration-200 cursor-pointer`}
+                            onClick={()=>{
+                                if(isDrawSelected){
+                                    setIsDrawSelected(false);
+                                }
+                                setIsEraserSelected(true)
+                            }}
+                        >
+                            <img src={'/static/images/Icon/eraser-64.png'} alt='' className='min-w-6 h-6 object-cover'/>
+                        </div> 
+                    </div>
+                    <div className="min-w-[100px] max-w-[140px] flex-1 flex justify-end pr-5">
+                        <div className="px-2 py-1 w-fit rounded-md border-[2px] border-secondary-gray-3 hover:border-secondary-gray-1 text-[16px] cursor-pointer font-semibold"
+                            onClick={()=>{
+                                setIsDrawSelected(false);
+                                setIsEraserSelected(false);
+                            }}
+                        >
+                            Done
+                        </div>
+                    </div>
+                </>
+                :
+                <>
                 <Popover className="flex flex-1 justify-center items-center relative">
                     {({open}:any)=>(
                         <>
@@ -490,77 +561,9 @@ function Toolbar({handleSaveImage , autoGetUrlRoomImage}:{handleSaveImage:any , 
                                                 setIsEraserSelected(false)
                                             }             
                                             setIsDrawSelected(!isDrawSelected)
-                                            // let idRect = uuid();
-                                            // handleSelectShape(selectedId , null);
-                                            // let uri = autoGetUrlRoomImage();
-                                            // await Promise.all([
-                                            //     firebase.database().ref(`retrospective/${roomData.roomId}/shape/${idRect}`).set({
-                                            //         rectId:`${idRect}`,
-                                            //         model:'textfield',
-                                            //         selectedByUserId:userData.userId,
-                                            //         selectedByUsername:userData.userName,
-                                            //         message:'',
-                                            //         type:'textfield',
-                                            //         positionX:-640+rects.length*10%640,
-                                            //         positionY:-440+rects.length*10%440,
-                                            //         scaleX : 1,
-                                            //         scaleY : 1,
-                                            //         rotation : 0,
-                                            //         positionWordX : 50,
-                                            //         positionWordY : 50,
-                                            //         adaptiveFontSize: 12,
-                                            //         imageUrl:'',
-                                            //         isDragging : false,
-                                            //     }),
-                                            //     firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/`).update({
-                                            //         roomImage: uri,
-                                            //         lastModified:firebaseServer.database.ServerValue.TIMESTAMP,
-                                            //     })
-                                            // ])
                                         }}
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-5 h-5 ${isDrawSelected ? "text-blue" : '' } `}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
-                                        </svg>
-
-                                    </div>
-                                    <div className={`flex p-3 border-[2px] ${isEraserSelected ? ' border-blue hover:border-blue' :'border-secondary-gray-3 hover:border-secondary-gray-1'}  ease-in duration-200 cursor-pointer`}
-                                        onClick={async()=>{
-                                            if(isDrawSelected){
-                                                setIsDrawSelected(false);
-                                            }
-                                            setIsEraserSelected(!isEraserSelected)
-                                            // let idRect = uuid();
-                                            // handleSelectShape(selectedId , null);
-                                            // let uri = autoGetUrlRoomImage();
-                                            // await Promise.all([
-                                            //     firebase.database().ref(`retrospective/${roomData.roomId}/shape/${idRect}`).set({
-                                            //         rectId:`${idRect}`,
-                                            //         model:'textfield',
-                                            //         selectedByUserId:userData.userId,
-                                            //         selectedByUsername:userData.userName,
-                                            //         message:'',
-                                            //         type:'textfield',
-                                            //         positionX:-640+rects.length*10%640,
-                                            //         positionY:-440+rects.length*10%440,
-                                            //         scaleX : 1,
-                                            //         scaleY : 1,
-                                            //         rotation : 0,
-                                            //         positionWordX : 50,
-                                            //         positionWordY : 50,
-                                            //         adaptiveFontSize: 12,
-                                            //         imageUrl:'',
-                                            //         isDragging : false,
-                                            //     }),
-                                            //     firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/`).update({
-                                            //         roomImage: uri,
-                                            //         lastModified:firebaseServer.database.ServerValue.TIMESTAMP,
-                                            //     })
-                                            // ])
-                                        }}
-                                    >
-                                        <AutoFixNormalIcon style={{fontSize:20, color: isEraserSelected ?'rgb(32 118 210 / var(--tw-border-opacity))' : '', }} />
-
+                                        <GestureIcon style={{fontSize:20, color: isDrawSelected ?'rgb(32 118 210 / var(--tw-border-opacity))' : '', }}/>
                                     </div>
                                 </Popover.Panel>
                             </Transition>
@@ -1445,6 +1448,9 @@ function Toolbar({handleSaveImage , autoGetUrlRoomImage}:{handleSaveImage:any , 
                     )}
                     
                 </Popover>
+                </>
+                }
+                
             </div>
             
         </div>

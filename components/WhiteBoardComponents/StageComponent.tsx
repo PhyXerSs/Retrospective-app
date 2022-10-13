@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Stage, Layer, Star, Text ,Rect ,Group , Line  } from 'react-konva';
 import { useRecoilState, useRecoilValue, useResetRecoilState } from 'recoil';
-import { dragedRectTypeState, DrawState, DrawStateType, isDrawSelectedState, isEraserSelectedState, isExpandedSideBarState, isShowTextAreaState, oldSelectedIdState, RectState, RectStateType, selectedIdState, WhiteBoardRoomDataState, whiteBoardUserDataState, whiteBoardUserDataStateType } from '../../WhiteBoardStateManagement/Atom';
+import { dragedRectTypeState, DrawState, DrawStateType, isDrawSelectedState, isEraserSelectedState, isExpandedSideBarState, isShowTextAreaState, oldSelectedIdState, RectState, RectStateType, selectedIdState, WhiteBoardRoomDataState, whiteBoardUserDataState, whiteBoardUserDataStateType , drawSettingState } from '../../WhiteBoardStateManagement/Atom';
 import ScrollContainer from 'react-indiana-drag-scroll'
 import ModalPostIt from './ModalPostIt';
 import { v4 as uuid } from 'uuid';
@@ -43,6 +43,7 @@ function StageComponent() {
     const [ isShareClick , setIsShareClick ] = useState<boolean>(false);
     const [ isDrawSelected , setIsDrawSelected ] = useRecoilState(isDrawSelectedState);
     const [ isEraserSelected , setIsEraserSelected ] = useRecoilState(isEraserSelectedState);
+    const [ drawSetting , setDrawSetting ] = useRecoilState(drawSettingState);
     const isDrawing = useRef(false);
     useEffect(()=>{
         focusRect();
@@ -119,6 +120,8 @@ function StageComponent() {
                         newLine.lineId = id;
                         newLine.tool = linesAttr.tool;
                         newLine.points = linesAttr.points;
+                        newLine.size = linesAttr.size;
+                        newLine.color = linesAttr.color;
                         newLines.push(newLine)
                     }
                 }
@@ -485,7 +488,9 @@ function StageComponent() {
             setLinesOnDrawId(idRect);
             firebase.database().ref(`retrospective/${roomData.roomId}/lines/${idRect}`).set({
                 tool:'pen',
-                points: [(pos.x - stageRef.current.attrs.x)/stageScale, (pos.y - stageRef.current.attrs.y)/stageScale]
+                points: [(pos.x - stageRef.current.attrs.x)/stageScale, (pos.y - stageRef.current.attrs.y)/stageScale],
+                size:drawSetting.size,
+                color:drawSetting.color,
             })
             // setLines([...lines, { tool:'pen', points: [(pos.x - stageRef.current.attrs.x)/stageScale, (pos.y - stageRef.current.attrs.y)/stageScale] }]);
         }else if(isEraserSelected){
@@ -790,8 +795,8 @@ function StageComponent() {
                         <Line
                             key={`lines${line.lineId}`}
                             points={line.points}
-                            stroke="#df4b26"
-                            strokeWidth={5}
+                            stroke={line.color}
+                            strokeWidth={line.size}
                             tension={0.5}
                             lineCap="round"
                             lineJoin="round"

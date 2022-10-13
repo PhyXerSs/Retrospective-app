@@ -267,7 +267,7 @@ function Lobby() {
                     name:categoryName,
                     headOfCategory:headOfCategory,
                 });
-                setIsPermissionAllowAllBoard(userHavePermission.includes(userData.userId))
+                setIsPermissionAllowAllBoard(userHavePermission?.includes(userData.userId))
             }
         })
         return ()=>{

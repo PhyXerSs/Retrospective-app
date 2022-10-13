@@ -31,7 +31,9 @@ export const RectState = atom({
 export interface DrawStateType{
     lineId:string,
     tool:string,
-    points:number[]
+    points:number[],
+    size:number,
+    color:string
 }
 
 export const DrawState = atom({
@@ -203,4 +205,17 @@ export const isDrawSelectedState = atom({
 export const isEraserSelectedState = atom({
     key:'is_Eraser_Selected_State',
     default:false as boolean
+})
+
+export interface DrawSettingType{
+    size:number
+    color:string
+}
+
+export const drawSettingState = atom({
+    key:'draw_Setting_State',
+    default:{
+        size:5,
+        color:'#000000'
+    }
 })

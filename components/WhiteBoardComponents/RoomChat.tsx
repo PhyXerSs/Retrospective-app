@@ -576,7 +576,7 @@ function RoomChat() {
     return (
 
         <>
-            <div className='rounded-full flex justify-center items-center w-14 h-14 fixed right-4 sm:right-10 bottom-[130px] lg:bottom-[40px] z-[1] bg-primary-blue-3 drop-shadow-lg cursor-pointer'
+            <div className='rounded-full flex justify-center items-center w-14 h-14 fixed right-4 sm:right-10 bottom-[130px] lg:bottom-[40px] z-[0] bg-primary-blue-3 drop-shadow-lg cursor-pointer'
                 onClick={()=>setShowRoomChat(!showRoomChat)}
             >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-9 w-9 text-primary-blue-2 hover:text-tertiary-light-sky-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

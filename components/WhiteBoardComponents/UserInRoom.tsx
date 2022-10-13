@@ -187,9 +187,9 @@ function UserInRoom({autoGetUrlRoomImage , setIsShareClick}:{autoGetUrlRoomImage
         if(categoryOfThisRoom !== '-' && userData.userId !== '-' && roomData.roomId !== '-'){
             unsubCategoryData = firebase.firestore().collection('whiteboard').doc(categoryOfThisRoom).onSnapshot(async snapshot=>{
                 if(snapshot.exists){
-                    let userHavePermission = snapshot.data()?.userAllowAccessAllBoard as string[];
+                    let userHavePermission = snapshot.data()?.userAllowAccessAllBoard as string[];      
                     //if not have permission => kick
-                    if(!userHavePermission.includes(userData.userId)){
+                    if(!userHavePermission?.includes(userData.userId)){
                         leaveRoom();
                     }
                 }
