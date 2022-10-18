@@ -50,6 +50,7 @@ function ModalConfrimLeaveCategory() {
                                                 });
                                                 
                                             }
+                                            resetLeaveCategory();
                                         }else{
                                             resetLeaveCategory();
                                         }
