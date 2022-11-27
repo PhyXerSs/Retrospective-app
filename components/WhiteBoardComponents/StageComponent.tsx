@@ -89,6 +89,12 @@ function StageComponent() {
                         newRect.adaptiveFontSize = rectAttr.adaptiveFontSize;
                         newRect.imageUrl = rectAttr.imageUrl;
                         newRect.isDragging = rectAttr.isDragging;
+                        newRect.favoriteList = [];
+                        for(let id in rectAttr?.favoriteList ){
+                            if(rectAttr?.favoriteList.hasOwnProperty(id)){
+                                newRect.favoriteList.push(rectAttr?.favoriteList[id]);
+                            }
+                        }
                         newRects.push(newRect)
                     }
                 }
@@ -547,6 +553,35 @@ function StageComponent() {
             handleSelectShape(selectedId,null);
         }
       };
+
+    const handleLikeClick = async(id:string) => {
+        await firebase.database().ref(`retrospective/${roomData.roomId}/shape/${id}/favoriteList`).once('value',async snapshot =>{
+            if(snapshot.val()){
+                let favoriteList = snapshot.val() as string[];
+                if(favoriteList.includes(userData.userId)){
+                    const index = favoriteList.indexOf(userData.userId);
+                    if (index > -1) { // only splice array when item is found
+                        favoriteList.splice(index, 1); // 2nd parameter means remove one item only
+                    }
+                }else{
+                    favoriteList.push(userData.userId);
+
+                }
+                await firebase.database().ref(`retrospective/${roomData.roomId}/shape/${id}`).update({
+                    "favoriteList":favoriteList
+                })
+            }else{
+                await firebase.database().ref(`retrospective/${roomData.roomId}/shape/${id}`).update({
+                    "favoriteList":[userData.userId]
+                })
+            }
+        })
+        // await firebase.database().ref(`retrospective/${roomData.roomId}/shape/${id}`).update({
+        //     favoriteList
+        // })
+        
+    }
+
     function convertFileToImage(file:File , mousePositionX : number , mousePositionY : number , mode : string){
       try {
         Resizer.imageFileResizer(
@@ -683,6 +718,7 @@ function StageComponent() {
                             adaptiveFontSize : 12,
                             imageUrl:'',
                             isDragging : false,
+                            favoriteList : [],
                         }),
                         firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/`).update({
                             roomImage: uri,
@@ -787,7 +823,8 @@ function StageComponent() {
                                     isYourSelect = {rect.selectedByUserId === userData.userId}
                                     showTextArea = {showTextArea}
                                     setShowTextArea={setShowTextArea}
-                                    
+                                    handleLikeClick={handleLikeClick}
+                                    isYourLikeThis = {rect.favoriteList.includes(userData.userId)}
                                 />
                         ))
                     }

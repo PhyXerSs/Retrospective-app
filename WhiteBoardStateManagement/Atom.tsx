@@ -20,6 +20,7 @@ export interface RectStateType{
     adaptiveFontSize:number,
     imageUrl:string,
     isDragging:boolean,
+    favoriteList: string[],
 }
 
 export const RectState = atom({

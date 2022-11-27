@@ -30,7 +30,7 @@ import Dislike from './WhiteboardToolComponent/StampObject/Dislike';
 import Clap from './WhiteboardToolComponent/StampObject/Clap';
 import TwoFinger from './WhiteboardToolComponent/StampObject/TwoFinger';
 import Bye from './WhiteboardToolComponent/StampObject/Bye';
-function ModalPostIt({ rect, userData, isSelected, onSelect, onChange , handleDragStart , handleDragEnd , handleDragMove , handleTransformChange , handleTextChange , stroke , isYourSelect , showTextArea , setShowTextArea , handleFontSizeChange}:{rect:RectStateType , userData:whiteBoardUserDataStateType , isSelected:boolean , onSelect:any , onChange:any , handleDragStart:any , handleDragEnd:any , handleDragMove :any , handleTransformChange:any , handleTextChange:any , stroke:string , isYourSelect:boolean , showTextArea:boolean , setShowTextArea:any , handleFontSizeChange:any}) {
+function ModalPostIt({ rect, userData, isSelected, onSelect, onChange , handleDragStart , handleDragEnd , handleDragMove , handleTransformChange , handleTextChange , stroke , isYourSelect , showTextArea , setShowTextArea , handleFontSizeChange , handleLikeClick , isYourLikeThis}:{rect:RectStateType , userData:whiteBoardUserDataStateType , isSelected:boolean , onSelect:any , onChange:any , handleDragStart:any , handleDragEnd:any , handleDragMove :any , handleTransformChange:any , handleTextChange:any , stroke:string , isYourSelect:boolean , showTextArea:boolean , setShowTextArea:any , handleFontSizeChange:any , handleLikeClick:any , isYourLikeThis:boolean}) {
     const rectRef = useRef<any>(null);
     const circleRef = useRef<any>(null);
     const imageRef = useRef<any>(null);
@@ -253,12 +253,12 @@ function ModalPostIt({ rect, userData, isSelected, onSelect, onChange , handleDr
     function renderShapeModel(model:string){
       if(model === 'rectangular'){
         return (
-          RectangularPostIt(rectRef, convertTypeToColorRect, rect, stroke, handleTransformChange, isSelected, showTextArea, textAreaRef, handleTextChange, setShowTextArea, isYourSelect, handleFontSizeChange)
+          RectangularPostIt(rectRef, convertTypeToColorRect, rect, stroke, handleTransformChange, isSelected, showTextArea, textAreaRef, handleTextChange, setShowTextArea, isYourSelect, handleFontSizeChange , handleLikeClick , isYourLikeThis)
         );
       }
       else if(model === 'circle'){
         return(
-          CircularPostIt(circleRef, convertTypeToColorRect, rect, stroke, handleTransformChange, isSelected, showTextArea, textAreaRef, handleTextChange, setShowTextArea, isYourSelect, handleFontSizeChange)
+          CircularPostIt(circleRef, convertTypeToColorRect, rect, stroke, handleTransformChange, isSelected, showTextArea, textAreaRef, handleTextChange, setShowTextArea, isYourSelect, handleFontSizeChange , handleLikeClick , isYourLikeThis)
         );
       }
       else if(model === 'image'){
