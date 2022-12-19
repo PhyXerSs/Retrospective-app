@@ -220,3 +220,19 @@ export const drawSettingState = atom({
         color:'#000000'
     }
 })
+
+export interface countDownType{
+    initialCountdown :number,
+    pause:boolean,
+    stop:boolean,
+}
+
+export const countdownState = atom({
+    key:'whiteboard_countdown_State',
+    default:{
+        initialCountdown: -1,
+        pause:false,
+        stop:false,
+    } as countDownType,
+    dangerouslyAllowMutability:true,
+})

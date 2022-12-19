@@ -16,6 +16,7 @@ import ShareModal from './ShareModal';
 import * as firebaseServer from 'firebase';
 import RoomChat from './RoomChat';
 import FullChatImage from './FullChatImage';
+import Timer from './Timer';
 function StageComponent() {
     const [ rects , setRects ] = useRecoilState(RectState);
     // const [ lines , setLines ] = useRecoilState(DrawState);
@@ -855,7 +856,6 @@ function StageComponent() {
                 </Layer>
             </Stage>
             <Toolbar handleSaveImage={handleSaveImage} autoGetUrlRoomImage={autoGetUrlRoomImage}/>
-            
          </div>
     )
 }

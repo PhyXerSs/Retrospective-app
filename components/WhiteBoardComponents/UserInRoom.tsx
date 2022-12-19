@@ -10,6 +10,7 @@ import UserProfileModal from './UserProfileModal';
 import ReUsername from './ReUsername';
 import ChangeProfilePicture from './ChangeProfilePicture';
 import ChangeBackground from './ChangeBackground';
+import Timer from './Timer';
 function UserInRoom({autoGetUrlRoomImage , setIsShareClick}:{autoGetUrlRoomImage:any , setIsShareClick:React.Dispatch<React.SetStateAction<boolean>>}) {
     const [roomData , setRoomData] = useRecoilState(WhiteBoardRoomDataState);
     const [ userInRoom , setUserInRoom ] = useState<userInRoomType[]>([])
@@ -324,11 +325,12 @@ function UserInRoom({autoGetUrlRoomImage , setIsShareClick}:{autoGetUrlRoomImage
                         Share
                     </button>
                 </div>
-                
+                <Timer/>
             </div>
             {isReUsernameClick && <ReUsername/>}
             {isShowChangeProfilePicture && <ChangeProfilePicture/>}
             {isShowChangeBackgroundPicture && <ChangeBackground/>}
+            
         </>           
     )
 }
