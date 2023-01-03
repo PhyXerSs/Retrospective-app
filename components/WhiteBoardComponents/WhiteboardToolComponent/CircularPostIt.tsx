@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Circle, Text } from 'react-konva';
 import { Html } from "react-konva-utils";
 import TextDecreaseIcon from '@mui/icons-material/TextDecrease';
@@ -6,8 +6,27 @@ import TextIncreaseIcon from '@mui/icons-material/TextIncrease';
 import { RectStateType } from '../../../WhiteBoardStateManagement/Atom';
 import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
 import ThumbUpOffAltIcon from '@mui/icons-material/ThumbUpOffAlt';
+import firebase from '../../../firebase/firebase-config';
 
 function CircularPostIt(circleRef: React.MutableRefObject<any>, convertTypeToColorRect: (type: string) => "#FDAEB0" | "#f88b4b" | "#FFD966" | "#FFC2D4" | "#D5B4F1" | "#A6D5E9" | "#C0CED9" | "#C8DFB7" | "#8ED2BE" | undefined, rect: RectStateType, stroke: string, handleTransformChange: any, isSelected: boolean, showTextArea: boolean, textAreaRef: React.RefObject<HTMLTextAreaElement>, handleTextChange: any, setShowTextArea: any, isYourSelect: boolean, handleFontSizeChange: any , handleLikeClick:any , isYourLikeThis:boolean) {
+    const [ isHoverLike , setIsHoverLike ] = useState(false);
+    const [ displayNameList , setDisplayNameList ] = useState<string[]>([]);
+    useEffect(()=>{
+      (async function(){
+        let newDisplayNameList = [] as string[];
+        for(let i in rect.favoriteList){
+          let userId = rect.favoriteList[i];
+          await firebase.database().ref(`userRetrospective/${userId}`).once('value', snapshot =>{
+            if(snapshot.val()){
+              newDisplayNameList.push(snapshot.val().displayName)
+            }
+          })
+        }
+        setDisplayNameList(newDisplayNameList);
+      }())
+      
+    },[rect.favoriteList])
+    
     return <>
       <Circle
         ref={circleRef}
@@ -93,13 +112,33 @@ function CircularPostIt(circleRef: React.MutableRefObject<any>, convertTypeToCol
             <div className="cursor-pointer justify-center items-center flex" 
               onClick={()=>{
                 handleLikeClick(rect.rectId)
-            }}>
+              }}
+              onMouseEnter={()=>{
+                setIsHoverLike(true);
+              }}
+              onMouseLeave={()=>{
+                setIsHoverLike(false);
+              }}
+            >
               {isYourLikeThis ? <ThumbUpAltIcon fontSize="small"/> : <ThumbUpOffAltIcon fontSize="small"/>}
             </div>
             <p className="text-[13px]">{rect.favoriteList.length}</p>
           </div>
         </div>
       </Html>
+      {isHoverLike && displayNameList.length > 0 &&
+        <Html groupProps={{ x: rect.positionWordX, y: rect.positionWordY, scaleX: rect.scaleX, scaleY: rect.scaleY, rotation: rect.rotation, width: 100, height: 100 }} divProps={{ style: { opacity: 1 } }}>
+          <div className="flex flex-col justify-center gap-1 absolute top-[140px] left-[-15px] max-h-[350px] bg-white rounded-md overflow-y-auto p-2"
+            style={{boxShadow: "rgba(0, 0, 0, 0.24) 0px 3px 8px"}}
+          >
+            {displayNameList.map((displayName,index)=>(
+              <p key={`likeDisplayName${index}`}
+                className="text-[13px] whitespace-nowrap "
+              >{displayName}</p>
+            ))}
+          </div>
+        </Html>
+      }
       {isSelected &&
         <Html groupProps={{ x: rect.positionWordX, y: rect.positionWordY, rotation: rect.rotation, scaleX: rect.scaleX, scaleY: rect.scaleY, width: 100, height: 100 }} divProps={{ style: { opacity: 1 } }}>
           <div className="absolute -top-[60px] left-[65px] p-1 flex items-center gap-1 bg-[#fafafa] rounded-lg drop-shadow-md">
