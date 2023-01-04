@@ -14,17 +14,16 @@ function RectangularPostIt(rectRef: React.MutableRefObject<any>, convertTypeToCo
   useEffect(()=>{
     (async function(){
       let newDisplayNameList = [] as string[];
-      for(let i in rect.favoriteList){
-        let userId = rect.favoriteList[i];
-        await firebase.database().ref(`userRetrospective/${userId}`).once('value', snapshot =>{
-          if(snapshot.val()){
-            newDisplayNameList.push(snapshot.val().displayName)
-          }
+      let snapshots = await Promise.all(
+        rect.favoriteList.map((userId)=>{
+          return firebase.database().ref(`userRetrospective/${userId}`).once('value')
         })
+      )
+      for(let i in snapshots){
+        newDisplayNameList.push(snapshots[i].val().displayName)
       }
       setDisplayNameList(newDisplayNameList);
     }())
-    
   },[rect.favoriteList])
 
     return <>
