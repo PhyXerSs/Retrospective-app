@@ -6,6 +6,7 @@ import { firestore } from "firebase";
 import { nanoid } from 'nanoid'
 
 const API_PATH : String = "https://scrum-poker-server-mintel.herokuapp.com/poker"
+const API_PATH_NEXT : String = "/api"
 export const generateKey = (pre : string) => {
     return `${ pre }_${ new Date().getTime() }`;
 }
@@ -354,10 +355,10 @@ export async function updateUserPicture(userId:string , roomId:string , imgUrl:s
 }
 
 export async function convertImageUrlToBase64(url:string){
-    let res = await axios.post(`${API_PATH}/base64`,{
+    let res = await axios.post(`${API_PATH_NEXT}/WhiteboardAPI/getimagefromurl`,{
         "url":url
     });
-    return res.data as any
+    return res.data.imageurl as any
 }
 
 export async function sendMessage( roomId:string , memberId:string , message:string , name:string , profilePicture:string , imageUrl:string ){
