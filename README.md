@@ -2,7 +2,7 @@
 
 Intern project
 
-Live site : https://retrospective-icezy.herokuapp.com
+Live site : https://retrospective-app.vercel.app/whiteboard
 
 # 	**Preview**
 
