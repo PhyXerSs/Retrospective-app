@@ -28,6 +28,7 @@ function RoomChat() {
     const dummyRef = useRef<HTMLSpanElement>(null);
     const userData = useRecoilValue(whiteBoardUserDataState);
     const [isScrollBottom, setIsScrollBottom] = useState<boolean>(true);
+    const [isLoadMessage, setIsLoadMessage] = useState<boolean>(true);
     const [ countMessageAlert , setCountMessageAlert ] = useState<number>(0);
     const [ countMessageBeforeRead , setCountMessageBeforeRead ] = useState<number>(0);
     const [ IsReadNewMessage , setIsReadNewMessage ] = useState<boolean>(false);
@@ -35,6 +36,9 @@ function RoomChat() {
     const [ previewImage , setPreviewImage ] = useState<string>('-');
     const inputFileRef = useRef<HTMLInputElement>(null);
     const setShowFullImage = useSetRecoilState(showFullImageState);
+    const [lastVisible, setLastVisible] = useState<any>(null);
+    const chatBoxRef = useRef<any>(null);
+
 
     useEffect(()=>{
         const tx = document.getElementsByTagName("textarea");
@@ -54,24 +58,41 @@ function RoomChat() {
             messageBody.scrollTop = messageBody.scrollHeight - messageBody.clientHeight;
             setIsScrollBottom(true)
         }
+
     },[showRoomChat])
 
-    useEffect(()=>{
+    useEffect(()=>{  
+        loadMessages();
+
         let unsubRoomMessage = () => {}
-        unsubRoomMessage = firebase.firestore().collection('RoomChat').doc(roomData.roomId).collection('chat')
+        unsubRoomMessage = firebase.firestore().collection('RoomChat').doc(roomData.roomId).collection('chat').orderBy("timestamp", "desc").limit(1)
             .onSnapshot(async(docs)=>{
-                let roomMessage = [] as chatMessageType[];
-                docs.forEach((doc)=>{
-                    let messageResult = {} as chatMessageType;
-                    messageResult.memberId = doc.data()?.memberId;
-                    messageResult.message = doc.data()?.message;
-                    messageResult.name = doc.data()?.name;
-                    messageResult.profilePicture = doc.data()?.profilePicture;
-                    messageResult.timeStamp = doc.data()?.timestamp;
-                    messageResult.imageUrl = doc.data()?.imageUrl;
-                    roomMessage.push(messageResult);
+                // let roomMessage = [] as chatMessageType[];
+                docs.docChanges().forEach((change)=>{
+                    if(change.type === 'added'){
+                        let messageResult = {} as chatMessageType;
+                        messageResult.memberId = change.doc.data()?.memberId;
+                        messageResult.message = change.doc.data()?.message;
+                        messageResult.name = change.doc.data()?.name;
+                        messageResult.profilePicture = change.doc.data()?.profilePicture;
+                        messageResult.timeStamp = change.doc.data()?.timestamp;
+                        messageResult.imageUrl = change.doc.data()?.imageUrl;
+                        // roomMessage.push(messageResult);
+                        setChatMessage(prevMessage=>[...prevMessage,messageResult]);
+                    }     
                 })
-                setChatMessage(roomMessage);
+                
+                // docs.forEach((doc)=>{
+                //     let messageResult = {} as chatMessageType;
+                //     messageResult.memberId = doc.data()?.memberId;
+                //     messageResult.message = doc.data()?.message;
+                //     messageResult.name = doc.data()?.name;
+                //     messageResult.profilePicture = doc.data()?.profilePicture;
+                //     messageResult.timeStamp = doc.data()?.timestamp;
+                //     messageResult.imageUrl = doc.data()?.imageUrl;
+                //     roomMessage.push(messageResult);
+                // })
+                // setChatMessage(roomMessage.reverse());
             })
         return ()=>{unsubRoomMessage(); setCountMessageBeforeRead(0); setCountMessageAlert(0); setShowRoomChat(false)}
     },[roomData.roomId])
@@ -110,7 +131,7 @@ function RoomChat() {
         if(countMessageBeforeRead !== chatMessage.length){
             setIsReadNewMessage(true)
         } 
-        if(isScrollBottom && countMessageBeforeRead === chatMessage.length){
+        if(isScrollBottom && countMessageBeforeRead === chatMessage.length && !isLoadMessage){
             setIsReadNewMessage(false)
         }
     },[chatMessage,countMessageBeforeRead,isScrollBottom])
@@ -555,6 +576,31 @@ function RoomChat() {
         }     
     }
 
+    const loadMessages = async() => {
+        setIsLoadMessage(true)
+        let messagesDoc = firebase.firestore().collection('RoomChat').doc(roomData.roomId).collection('chat').orderBy("timestamp", "desc");
+        if(lastVisible){
+            messagesDoc = messagesDoc.startAfter(lastVisible);
+        }
+        const messagesDocSnapshot = await messagesDoc.get();
+
+        let loadRoomMessage = [] as chatMessageType[];
+        messagesDocSnapshot.docs.forEach((doc)=>{
+                let messageResult = {} as chatMessageType;
+                messageResult.memberId = doc.data()?.memberId;
+                messageResult.message = doc.data()?.message;
+                messageResult.name = doc.data()?.name;
+                messageResult.profilePicture = doc.data()?.profilePicture;
+                messageResult.timeStamp = doc.data()?.timestamp;
+                messageResult.imageUrl = doc.data()?.imageUrl;
+                loadRoomMessage.push(messageResult);
+        })
+        setLastVisible(messagesDocSnapshot.docs[messagesDocSnapshot.docs.length - 1]);
+        loadRoomMessage = loadRoomMessage.reverse();
+        setChatMessage([...loadRoomMessage,...chatMessage]);
+        setIsLoadMessage(false)
+    }
+
     async function sendMessage(roomId:string , userId:string , message:string , displayName:string , profilePicture:string , previewImage:string){
         const timeinsec = String(new Date().valueOf());
         try{
@@ -691,6 +737,7 @@ function RoomChat() {
 
                     <div className="flex flex-col w-full h-[354px] mt-[48px] overflow-y-auto gap-[2px] justify-start items-center bg-white relative"
                         id="messageBody"
+                        ref={chatBoxRef}
                         onScroll={(e:any)=>{
                             e.preventDefault();
                             e.stopPropagation();
