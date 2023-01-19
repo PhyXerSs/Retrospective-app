@@ -24,6 +24,8 @@ import { nanoid } from 'nanoid';
 import ModalAlert from './ModalPopupAlert/ModalAlert';
 import ModalConfrimLeaveCategory from './ModalPopupAlert/ModalConfrimLeaveCategory';
 import PermissionSettingModal from './PermissionSettingModal';
+import JoinCategoryModal from './JoinCategoryModal';
+import InviteToTeamModal from './InviteToTeamModal';
 export interface userInRoomType{
     userId:string,
     name:string,
@@ -66,6 +68,7 @@ function Lobby() {
     const [ isHoverRoom , setIsHoverRoom ] = useState<number>(-1);
     const [ isCopyUrl , setIsCopyUrl ] = useState<boolean>(false);
     const [isCreateCategoryClick , setIsCreateCategoryClick ] = useState<boolean>(false);
+    const [isJoinCategoryClick , setIsJoinCategoryClick ] = useState<boolean>(false);
     const [roomListFiltered , setRoomListFiltered  ] = useState<roomListType[]>([]);
     const [isShowDropdownCategory , setIsShowDropdownCategory ] = useState<number>(-1);
     const [ isShowRenameCategory , setIsShowRenameCategory ] = useState<string>('-');
@@ -76,6 +79,7 @@ function Lobby() {
     const [ categoryObj , setCategoryObj ] = useState<categoryObjectType>({id:'',name:'',headOfCategory:''});
     const [ categoryPermissionSelected , setCategoryPermissionSelected ] = useState('-');
     const [ isPermissionAllowAllBoard , setIsPermissionAllowAllBoard ] = useRecoilState(isPermissionAllowAllBoardStage);
+    const [ isInviteClick , setIsInviteClick ] = useState<string>('');
     const CssTextField = styled(TextField)({
         '& label.Mui-focused': {
           borderColor:'#94a3b8',
@@ -334,22 +338,49 @@ function Lobby() {
                             setIsShowDropdownCategory={setIsShowDropdownCategory}
                             setIsShowRenameCategory={setIsShowRenameCategory}
                             setCategoryPermissionSelected={setCategoryPermissionSelected}
+                            setIsInviteClick={setIsInviteClick}
                         />
                     ))}
-                    <motion.div className={`flex justify-center items-center py-3 w-[168px] bg-white hover:bg-secondary-gray-4 text-[#2c60db] duration-200 ease-in rounded-lg cursor-pointer`}
-                            style={{boxShadow: 'rgba(0, 0, 0, 0.15) 0px 14px 28px, rgba(0, 0, 0, 0.15) 0px 10px 10px'}}
-                            animate={{ opacity: 1 , x:0 }}
-                            initial={{opacity : 0 , x:-400 }}
-                            exit ={{ opacity : 0 , x:0 }}
-                            transition={{  duration: 0.3 + (categoriesList?.length) * 0.15 }}
-                            onClick={()=>{
-                                setIsCreateCategoryClick(true);
-                            }}
+                    <Popover>
+                        <Popover.Button className="outline-none">
+                            <motion.div className={`flex justify-center items-center py-3 w-[168px] bg-white hover:bg-secondary-gray-4 text-[#2c60db] duration-200 ease-in rounded-lg cursor-pointer`}
+                                    style={{boxShadow: 'rgba(0, 0, 0, 0.15) 0px 14px 28px, rgba(0, 0, 0, 0.15) 0px 10px 10px'}}
+                                    animate={{ opacity: 1 , x:0 }}
+                                    initial={{opacity : 0 , x:-400 }}
+                                    exit ={{ opacity : 0 , x:0 }}
+                                    transition={{  duration: 0.3 + (categoriesList?.length) * 0.15 }}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                                    </svg>
+                            </motion.div>
+                        </Popover.Button>
+                        <Transition
+                            enter="transition duration-100 ease-out"
+                            enterFrom="transform scale-95 opacity-0"
+                            enterTo="transform scale-100 opacity-100"
+                            leave="transition duration-75 ease-out"
+                            leaveFrom="transform scale-100 opacity-100"
+                            leaveTo="transform scale-95 opacity-0"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                            </svg>
-                    </motion.div>
+                            <Popover.Panel className="absolute w-40 flex flex-col items-center left-44 -top-[50px] bg-white rounded-lg drop-shadow-md" >
+                                <Popover.Button className="flex justify-start py-4 px-8 items-center w-full bg-white  rounded-t-md cursor-pointer duration-150 ease-in hover:bg-[#e8f3ff] gap-2 border-b-[1px] border-b-secondary-gray-4"
+                                    onClick={()=>{
+                                        setIsCreateCategoryClick(true);
+                                    }}
+                                >
+                                    <p>Create Team</p>
+                                </Popover.Button>
+                                <Popover.Button className="flex justify-start py-4 px-8 items-center w-full bg-white  rounded-t-md cursor-pointer duration-150 ease-in hover:bg-[#e8f3ff] gap-2 border-b-[1px] border-b-secondary-gray-4"
+                                    onClick={()=>{
+                                        setIsJoinCategoryClick(true);
+                                    }}
+                                >
+                                    <p>Join Team</p>
+                                </Popover.Button>
+                            </Popover.Panel>
+                        </Transition>
+                    </Popover>
                 </div>
                 <div className="w-full pl-[22px] md:pl-9 lg:pl-24 flex flex-col justify-start items-start">
                     <div className=" w-full flex justify-between items-center">
@@ -538,6 +569,8 @@ function Lobby() {
                 </AnimatePresence>
             </div>
             <CreateCategoryModal isCreateCategoryClick={isCreateCategoryClick} setIsCreateCategoryClick={setIsCreateCategoryClick} categoriesList={categoriesList}/>
+            <JoinCategoryModal isJoinCategoryClick={isJoinCategoryClick} setIsJoinCategoryClick={setIsJoinCategoryClick}/>
+            <InviteToTeamModal isInviteClick={isInviteClick} setIsInviteClick={setIsInviteClick}/>
             <RenameCategory isShowRenameCategory={isShowRenameCategory} setIsShowRenameCategory={setIsShowRenameCategory} categoriesList={categoriesList} />
             {isReUsernameClick && <ReUsername/>}
             {isShowChangeProfilePicture &&<ChangeProfilePicture/>}

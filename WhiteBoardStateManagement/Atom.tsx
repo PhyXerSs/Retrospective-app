@@ -236,3 +236,8 @@ export const countdownState = atom({
     } as countDownType,
     dangerouslyAllowMutability:true,
 })
+
+export const IsRequestToJoinCategoryState = atom({
+    key:'Is_Request_To_Join_Category_State',
+    default:false as boolean
+})

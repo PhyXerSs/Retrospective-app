@@ -2,9 +2,11 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Transition , Popover } from '@headlessui/react'
 import { motion } from 'framer-motion'
 import { useRecoilState, useResetRecoilState, useSetRecoilState } from 'recoil';
-import { isShowDeleteConfirmState, leaveCategoryState, selectCategoryState, whiteBoardUserDataState } from '../../WhiteBoardStateManagement/Atom';
+import { IsRequestToJoinCategoryState, isShowDeleteConfirmState, leaveCategoryState, selectCategoryState, whiteBoardUserDataState } from '../../WhiteBoardStateManagement/Atom';
 import { deleteCategories } from '../../pages/api/WhiteboardAPI/api';
 import { categoryObjectType } from './Lobby';
+import firebase from '../../firebase/firebase-config';
+import ErrorIcon from '@mui/icons-material/Error';
 interface props{
     index:number;
     category:categoryObjectType;
@@ -12,13 +14,80 @@ interface props{
     setIsShowDropdownCategory:React.Dispatch<React.SetStateAction<number>>
     setIsShowRenameCategory:React.Dispatch<React.SetStateAction<string>>
     setCategoryPermissionSelected:React.Dispatch<React.SetStateAction<string>>
+    setIsInviteClick:React.Dispatch<React.SetStateAction<string>>;
 }
 
-function ModalCategorySelect({index,category , isShowDropdownCategory , setIsShowDropdownCategory , setIsShowRenameCategory , setCategoryPermissionSelected} : props) {
+interface userPermissionObj{
+    userId:string;
+    userDisplayName:string;
+    isAllow:boolean;
+    isHeadOfCategory:boolean;
+}
+
+function ModalCategorySelect({index,category , isShowDropdownCategory , setIsShowDropdownCategory , setIsShowRenameCategory , setCategoryPermissionSelected , setIsInviteClick} : props) {
     const [ selectCategory , setSelectCategory ] = useRecoilState(selectCategoryState);
     const setIsShowDeleteConfirm = useSetRecoilState(isShowDeleteConfirmState);
     const [ userData , setUserData ] = useRecoilState(whiteBoardUserDataState);
     const setLeaveCategory = useSetRecoilState(leaveCategoryState);
+    const [ isRequestToJoin , setIsRequestToJoin ] = useRecoilState(IsRequestToJoinCategoryState);
+    const [ userWithPermission , setUserWithPermission ] = useState<userPermissionObj[]>([]);
+
+    useEffect(()=>{
+        let unsubCategoryData = ()=>{};
+        if(category.id !== '-'){
+            unsubCategoryData = firebase.firestore().collection('whiteboard').doc(category.id).onSnapshot(async snapshot=>{
+                let categoryData = snapshot.data();
+                let allUserInCategory = categoryData?.userInCategory as string[];
+                let userHavePermission = categoryData?.userAllowAccessAllBoard as string[];
+                let headOfCategoryId = categoryData?. headOfCategory as string;
+                let userPermissionList = [] as userPermissionObj[];
+                for(let i in allUserInCategory){
+                    let userDisplayName = '';
+                    await firebase.database().ref(`userRetrospective/${allUserInCategory[i]}`).once('value' , snap =>{
+                        if(snap.val()){
+                            userDisplayName = snap.val()?.displayName;
+                        }
+                    })
+                    let userPermission = {} as userPermissionObj;
+                    userPermission.userId = allUserInCategory[i];
+                    userPermission.userDisplayName = userDisplayName;
+
+                    if(userHavePermission.includes(allUserInCategory[i])){
+                        userPermission.isAllow = true;
+                    }else{
+                        userPermission.isAllow = false;
+                    }
+
+                    if(headOfCategoryId === allUserInCategory[i]){
+                        userPermission.isHeadOfCategory = true;
+                    }else{
+                        userPermission.isHeadOfCategory = false;
+                    }
+
+                    userPermissionList.push(userPermission)
+                }
+              
+                setUserWithPermission(userPermissionList)
+            })   
+        }
+        return () =>{
+            unsubCategoryData();
+        }
+    },[category])
+
+    function HaveAnyReqeust(userWithPermission:userPermissionObj[]){
+        let count = 0;
+        userWithPermission.forEach(user=>{
+            if(!user.isAllow){
+                count += 1;
+            }
+        })
+        if(count===0){
+            return false
+        }
+        return true
+    }
+
     return(
         <Popover>
             {({ open , close}:{open:any , close:any})=>{
@@ -27,8 +96,8 @@ function ModalCategorySelect({index,category , isShowDropdownCategory , setIsSho
                 }
                 return(
                     <>
-                        <Popover.Button>
-                            <motion.div className={`flex justify-center items-center py-3 px-2 ${selectCategory === category.id ? 'text-white bg-[#2c60db] hover:bg-[#153a62]' : 'text-[#1a1a1a] bg-white hover:bg-secondary-gray-4'} duration-200 ease-in rounded-lg cursor-pointer`}
+                        <Popover.Button className="outline-none">
+                            <motion.div className={`flex justify-center items-center py-3 px-2 ${selectCategory === category.id ? 'text-white bg-[#2c60db] hover:bg-[#153a62]' : 'text-[#1a1a1a] bg-white hover:bg-secondary-gray-4'} duration-200 ease-in rounded-lg cursor-pointer relative`}
                                 style={{boxShadow: 'rgba(0, 0, 0, 0.15) 0px 14px 28px, rgba(0, 0, 0, 0.15) 0px 10px 10px'}}
                                 animate={{ opacity: 1 , x:0 }}
                                 initial={{opacity : 0 , x:-500 }}
@@ -43,7 +112,11 @@ function ModalCategorySelect({index,category , isShowDropdownCategory , setIsSho
                                     }
                                 }}
                             >
-                                <p className="font-semibold w-[152px] break-words">{category.name}</p>
+                                <div className="flex justify-center items-center gap-1 w-[152px] break-words">
+                                    {HaveAnyReqeust(userWithPermission) && category.headOfCategory === userData.userId && <ErrorIcon style={{fontSize:'18px'}}/>}
+                                    <p className="font-semibold">{category.name}</p>
+                                </div>
+                                
                             </motion.div>
                         </Popover.Button>
                         
@@ -66,14 +139,22 @@ function ModalCategorySelect({index,category , isShowDropdownCategory , setIsSho
                                 >
                                     <p>Rename</p>
                                 </Popover.Button>}
+                                <Popover.Button className="flex justify-start py-4 px-8 items-center w-full bg-white cursor-pointer duration-150 ease-in hover:bg-[#e8f3ff] gap-2 border-b-[1px] border-b-secondary-gray-4"
+                                    onClick={async(e:any)=>{
+                                        setIsInviteClick(category.id);
+                                    }}
+                                >
+                                    <p>Invite</p>
+                                </Popover.Button>
                                 {category.headOfCategory === userData.userId &&
-                                <Popover.Button className="flex justify-start py-4 px-8 items-center w-full bg-white  rounded-t-md cursor-pointer duration-150 ease-in hover:bg-[#e8f3ff] gap-2 border-b-[1px] border-b-secondary-gray-4"
+                                <Popover.Button className="flex justify-start py-4 px-8 items-center w-full bg-white cursor-pointer duration-150 ease-in hover:bg-[#e8f3ff] gap-2 border-b-[1px] border-b-secondary-gray-4"
                                     onClick={async(e:any)=>{
                                         e.stopPropagation();
                                         setCategoryPermissionSelected(category.id)
                                     }}
                                 >
                                     <p>Permission</p>
+                                    {HaveAnyReqeust(userWithPermission) && <ErrorIcon style={{fontSize:'18px' , color:'#FF8B13'}}/>}
                                 </Popover.Button>}
                                 {category.headOfCategory === userData.userId ?
                                 <Popover.Button className="flex justify-start py-4 px-8 items-center w-full bg-white rounded-b-md cursor-pointer duration-150 ease-in hover:bg-[#e8f3ff] gap-2"
@@ -98,7 +179,8 @@ function ModalCategorySelect({index,category , isShowDropdownCategory , setIsSho
                                 >
                                     <p>Delete</p>
                                 </Popover.Button>
-                                :<Popover.Button className="flex justify-start py-4 px-8 items-center w-full bg-white rounded-b-md cursor-pointer duration-150 ease-in hover:bg-[#e8f3ff] gap-2"
+                                :
+                                <Popover.Button className="flex justify-start py-4 px-8 items-center w-full bg-white rounded-b-md cursor-pointer duration-150 ease-in hover:bg-[#e8f3ff] gap-2"
                                     onClick={async(e:any)=>{
                                         e.stopPropagation();
                                         setLeaveCategory({

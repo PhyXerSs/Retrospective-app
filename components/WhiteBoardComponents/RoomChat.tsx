@@ -29,7 +29,7 @@ function RoomChat() {
     const userData = useRecoilValue(whiteBoardUserDataState);
     const [isScrollBottom, setIsScrollBottom] = useState<boolean>(true);
     const [isLoadMessage, setIsLoadMessage] = useState<boolean>(true);
-    const [ countMessageAlert , setCountMessageAlert ] = useState<number>(0);
+    const [ countMessageAlert , setCountMessageAlert ] = useState<number|string>(0);
     const [ countMessageBeforeRead , setCountMessageBeforeRead ] = useState<number>(0);
     const [ IsReadNewMessage , setIsReadNewMessage ] = useState<boolean>(false);
     const [ hoverMessage , setHoverMessage ] = useState<number>(-1);
