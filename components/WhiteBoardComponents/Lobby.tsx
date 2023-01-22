@@ -371,7 +371,7 @@ function Lobby() {
                                 >
                                     <p>Create Team</p>
                                 </Popover.Button>
-                                <Popover.Button className="flex justify-start py-4 px-8 items-center w-full bg-white  rounded-t-md cursor-pointer duration-150 ease-in hover:bg-[#e8f3ff] gap-2 border-b-[1px] border-b-secondary-gray-4"
+                                <Popover.Button className="flex justify-start py-4 px-8 items-center w-full bg-white  rounded-b-md cursor-pointer duration-150 ease-in hover:bg-[#e8f3ff] gap-2 border-b-[1px] border-b-secondary-gray-4"
                                     onClick={()=>{
                                         setIsJoinCategoryClick(true);
                                     }}

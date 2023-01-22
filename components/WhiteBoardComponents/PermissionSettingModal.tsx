@@ -139,7 +139,7 @@ function PermissionSettingModal({categoryPermissionSelected , setCategoryPermiss
         return count;
     }
 
-    let userFiltered = userWithPermission.filter(user=> user.userDisplayName.includes(searchMember))
+    let userFiltered = userWithPermission.filter(user=> user.userDisplayName.toLowerCase().includes(searchMember.toLowerCase()))
 
     return (
         <AnimatePresence>
