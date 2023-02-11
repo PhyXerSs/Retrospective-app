@@ -220,9 +220,11 @@ function StageComponent() {
           y: stage.getPointerPosition().y / oldScale - stage.y() / oldScale
         };
     
-        const newScale = e.evt.deltaY > 0 ? oldScale / scaleBy :oldScale * scaleBy  ;
+        let newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy ;
         if (newScale <= 0.6) {
-          return;
+            newScale = 0.6
+        }else if(newScale >= 3.6){
+            newScale = 3.6
         }
     
         let x =
@@ -765,7 +767,7 @@ function StageComponent() {
                 e.stopPropagation()
             }}
         >
-            <UserInRoom autoGetUrlRoomImage={autoGetUrlRoomImage} setIsShareClick={setIsShareClick}/>
+            <UserInRoom autoGetUrlRoomImage={autoGetUrlRoomImage} setIsShareClick={setIsShareClick} stageScale={stageScale}/>
             <ShareModal isShareClick={isShareClick} setIsShareClick={setIsShareClick}/>
             
             <Stage className={`bg-[#f2f2f2] w-[${stageWidth}px] h-[${stageHeight}px] overflow-clip`}

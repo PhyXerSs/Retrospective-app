@@ -11,7 +11,7 @@ import ReUsername from './ReUsername';
 import ChangeProfilePicture from './ChangeProfilePicture';
 import ChangeBackground from './ChangeBackground';
 import Timer from './Timer';
-function UserInRoom({autoGetUrlRoomImage , setIsShareClick}:{autoGetUrlRoomImage:any , setIsShareClick:React.Dispatch<React.SetStateAction<boolean>>}) {
+function UserInRoom({autoGetUrlRoomImage , setIsShareClick , stageScale}:{autoGetUrlRoomImage:any , setIsShareClick:React.Dispatch<React.SetStateAction<boolean>> , stageScale:number}) {
     const [roomData , setRoomData] = useRecoilState(WhiteBoardRoomDataState);
     const [ userInRoom , setUserInRoom ] = useState<userInRoomType[]>([])
     const resetRects = useResetRecoilState(RectState);
@@ -324,6 +324,9 @@ function UserInRoom({autoGetUrlRoomImage , setIsShareClick}:{autoGetUrlRoomImage
                     >
                         Share
                     </button>
+                </div>
+                <div className="absolute top-28 right-0 flex items-center text-primary-blue-2 font-bold px-3 py-1 rounded-sm bg-primary-blue-3">
+                    <p>{`Zoom ${(Math.floor(stageScale / 0.6  * 10)/10).toFixed(2)}X`}</p>
                 </div>
                 <Timer/>
             </div>
