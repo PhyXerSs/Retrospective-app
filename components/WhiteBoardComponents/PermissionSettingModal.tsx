@@ -48,7 +48,7 @@ function PermissionSettingModal({categoryPermissionSelected , setCategoryPermiss
                     userPermission.userId = allUserInCategory[i];
                     userPermission.userDisplayName = userDisplayName;
 
-                    if(userHavePermission.includes(allUserInCategory[i])){
+                    if(userHavePermission?.includes(allUserInCategory[i])){
                         userPermission.isAllow = true;
                     }else{
                         userPermission.isAllow = false;
@@ -139,7 +139,7 @@ function PermissionSettingModal({categoryPermissionSelected , setCategoryPermiss
         return count;
     }
 
-    let userFiltered = userWithPermission?.filter(user=> user.userDisplayName?.toLowerCase().includes(searchMember?.toLowerCase()))
+    let userFiltered = userWithPermission?.filter(user=> user?.userDisplayName?.toLowerCase().includes(searchMember?.toLowerCase()))
 
     return (
         <AnimatePresence>

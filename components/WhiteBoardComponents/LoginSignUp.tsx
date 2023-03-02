@@ -78,10 +78,13 @@ function LoginSignUp() {
                         // user.category = snapshot.val()?.category as string[];
                         setUserData(user);
                     }else{// new user case (login with gmail)
+                        if(!authUser.displayName)
+                            return;
                         let categoryDocs = await firebase.firestore().collection('whiteboard').add({
                             'catagories': 'DEFAULT',
                             'create': new Date().valueOf(),
                             'userInCategory':[authUser.uid],
+                            'userAllowAccessAllBoard':[authUser.uid],
                             'headOfCategory':authUser.uid
                         })
                         firebase.database().ref(`/userRetrospective/${authUser.uid}`).set({
@@ -187,10 +190,16 @@ function LoginSignUp() {
         if(signupEmailRef.current && signupPasswordRef.current && signupDisplayName.current){
             try{
                 let resultSignup = await firebase.auth().createUserWithEmailAndPassword(signupEmailRef.current.value , signupPasswordRef.current.value);
+                let user = firebase.auth().currentUser;
+                user?.updateProfile({
+                    displayName: signupDisplayName.current.value.replaceAll(" ","").replaceAll("-",""),
+                    photoURL: '/static/images/whiteboard/profile.png'
+                })
                 let categoryDocs = await firebase.firestore().collection('whiteboard').add({
                     'catagories': 'DEFAULT',
                     'create': new Date().valueOf(),
                     'userInCategory':[resultSignup?.user?.uid],
+                    'userAllowAccessAllBoard':[resultSignup?.user?.uid],
                     'headOfCategory':resultSignup?.user?.uid
                 })
                 await firebase.database().ref(`/userRetrospective/${resultSignup?.user?.uid}`).set({
@@ -203,11 +212,8 @@ function LoginSignUp() {
                 newUser.userName = signupDisplayName.current.value.replaceAll(" ","").replaceAll("-","");
                 newUser.profilePicture = "/static/images/whiteboard/profile.png";
                 newUser.backgroundPicture = "";
-                // newUser.category = [categoryDocs.id];
-                setDelayAnimation(-1);
-                setTimeout(()=>{
-                    setUserData(newUser);
-                },600);
+                newUser.category = [categoryDocs.id];
+                setUserData(newUser);
             }catch(err:any){
                 console.log(err);
                 

@@ -163,7 +163,7 @@ function Lobby() {
             firebase.database().ref(`retrospective`).off();
             firebase.database().ref(`/userRetrospective/${userData.userId}/category`).off();  
         }
-    },[userData , roomData]);
+    },[userData , roomData , selectCategory]);
     
     useEffect(()=>{
         let unsubCategory = () => {};
@@ -227,7 +227,7 @@ function Lobby() {
         }
         function compareLastAlphabetically( a:roomListType, b:roomListType ) {  
             if ( a.roomName.toLowerCase() < b.roomName.toLowerCase()){
-              return -1;
+              return -1;selectCategory
             }
             if ( a.roomName.toLowerCase()  > b.roomName.toLowerCase()){
               return 1;
@@ -255,28 +255,34 @@ function Lobby() {
     }
 
     useEffect(()=>{
-        let unsubCategoryData = firebase.firestore().collection('whiteboard').doc(selectCategory).onSnapshot(async snapshot=>{
-            if(snapshot.exists){
-                let categoryName ='';
-                let headOfCategory = '';
-                let userHavePermission = snapshot.data()?.userAllowAccessAllBoard as string[];
-                await firebase.database().ref(`userRetrospective/${snapshot.data()?.headOfCategory}`).once('value' , snap =>{
-                    if(snap.val()){
-                        headOfCategory = snap.val()?.displayName
-                    }
-                })
-                categoryName = snapshot.data()?.catagories
-                setCategoryObj({
-                    id:selectCategory,
-                    name:categoryName,
-                    headOfCategory:headOfCategory,
-                });
-                setIsPermissionAllowAllBoard(userHavePermission?.includes(userData.userId))
-            }
-        })
+        let unsubCategoryData = () => {};
+        if(selectCategory){
+            unsubCategoryData = firebase.firestore().collection('whiteboard').doc(selectCategory).onSnapshot(async snapshot=>{
+                if(snapshot.exists){
+                    let categoryName ='';
+                    let headOfCategory = '';
+                    let userHavePermission = snapshot.data()?.userAllowAccessAllBoard as string[];
+                    await firebase.database().ref(`userRetrospective/${snapshot.data()?.headOfCategory}`).once('value' , snap =>{
+                        if(snap.val()){
+                            headOfCategory = snap.val()?.displayName
+                        }
+                    })
+                    categoryName = snapshot.data()?.catagories
+                    setCategoryObj({
+                        id:selectCategory,
+                        name:categoryName,
+                        headOfCategory:headOfCategory,
+                    });
+                    setIsPermissionAllowAllBoard(userHavePermission?.includes(userData.userId))
+                }
+            })
+        }else{
+
+        }
         return ()=>{
             unsubCategoryData();
         }
+        
     },[selectCategory , userData])
 
     return (
@@ -647,6 +653,9 @@ function Lobby() {
                                                 }
                                             }catch(err){
                                                 console.log(err);
+                                                setIsLoading(false);
+                                                setIsCreateRoomClick(false);
+                                                setMessageModalAlert('Please select a team before Create Room.')
                                             }
                                     }}
                                 >

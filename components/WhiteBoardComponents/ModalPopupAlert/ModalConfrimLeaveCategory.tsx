@@ -48,7 +48,12 @@ function ModalConfrimLeaveCategory() {
                                                 await firebase.firestore().collection('whiteboard').doc(leaveCategory.categoryId).update({
                                                     userInCategory:usersCategoryList.filter(id => id !== userData.userId),
                                                 });
-                                                
+                                            }
+                                            let userAllowAccessAllBoard = categoyDoc.data()?.userAllowAccessAllBoard as string[]
+                                            if(userAllowAccessAllBoard.includes(userData.userId)){
+                                                await firebase.firestore().collection('whiteboard').doc(leaveCategory.categoryId).update({
+                                                    userAllowAccessAllBoard:userAllowAccessAllBoard.filter(id => id !== userData.userId),
+                                                });
                                             }
                                             resetLeaveCategory();
                                         }else{
