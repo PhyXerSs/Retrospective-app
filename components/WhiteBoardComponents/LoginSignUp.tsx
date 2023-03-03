@@ -276,10 +276,10 @@ function LoginSignUp() {
                                         <p className="text-h5 font-bold mt-10 " style={{fontFamily:"'Montserrat', sans-serif"}}>Or Sign in with</p>
                                     </div>
                                     
-                                    <button onClick={signInWithGoogle} className="w-full flex justify-center items-center py-3 border-[1px] border-secondary-gray-3 rounded-md outline-none mt-8 gap-3">
+                                    <div onClick={signInWithGoogle} className="w-full flex justify-center items-center py-3 border-[1px] border-secondary-gray-3 rounded-md outline-none mt-8 gap-3">
                                                 <img src="/static/images/whiteboard/googleIcon.jpg"  alt="" className="w-4" />
                                                 <p className="text-secondary-gray-3 text-h5 font-semibold" style={{fontFamily:"'Montserrat', sans-serif"}}>Sign in with Google</p>
-                                    </button>
+                                    </div>
                                     {/* <GoogleLogin
                                         clientId="40517616525-di1vjhemnupkg9iavccfft03b2k8egkf.apps.googleusercontent.com"
                                         render={renderProps => (
@@ -472,10 +472,10 @@ function LoginSignUp() {
                                     <p className="text-h5 font-bold mt-10 " style={{fontFamily:"'Montserrat', sans-serif"}}>Or Sign in with</p>
                                 </div>
                                 
-                                <button onClick={signInWithGoogle} className="w-full flex justify-center items-center py-3 border-[1px] border-secondary-gray-3 rounded-md outline-none mt-8 gap-3">
+                                <div onClick={signInWithGoogle} className="w-full flex justify-center items-center py-3 border-[1px] border-secondary-gray-3 rounded-md outline-none mt-8 gap-3">
                                             <img src="/static/images/whiteboard/googleIcon.jpg"  alt="" className="w-4" />
                                             <p className="text-secondary-gray-3 text-h5 font-semibold" style={{fontFamily:"'Montserrat', sans-serif"}}>Sign in with Google</p>
-                                </button>
+                                </div>
                                 {/* <GoogleLogin
                                     clientId="40517616525-di1vjhemnupkg9iavccfft03b2k8egkf.apps.googleusercontent.com"
                                     render={renderProps => (
