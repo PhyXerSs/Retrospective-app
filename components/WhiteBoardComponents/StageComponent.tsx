@@ -254,7 +254,7 @@ function StageComponent() {
         const id = e.target.id();
     };
     const handleDragEnd = (e:any) => {
-        let uri = autoGetUrlRoomImage();
+        // let uri = autoGetUrlRoomImage();
         const id = e.target.id();
         (async function(){
             await Promise.all([
@@ -268,7 +268,7 @@ function StageComponent() {
                     }
                 }),
                 firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/`).update({
-                    roomImage: uri,
+                    // roomImage: uri,
                     lastModified:firebaseServer.database.ServerValue.TIMESTAMP,
                 })
 
@@ -649,7 +649,7 @@ function StageComponent() {
                 };
                 handleSelectShape(selectedId , null);
                 let idRect = uuid();
-                let uri = autoGetUrlRoomImage();
+                // let uri = autoGetUrlRoomImage();
                 if(dragedRectType.type === 'shapeLine'){
                     await Promise.all([
                         firebase.database().ref(`retrospective/${roomData.roomId}/shape/${idRect}`).set({
@@ -671,7 +671,7 @@ function StageComponent() {
                             isDragging : false,
                         }),
                         firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/`).update({
-                            roomImage: uri,
+                            // roomImage: uri,
                             lastModified:firebaseServer.database.ServerValue.TIMESTAMP,
                         })
                     ])
@@ -697,7 +697,7 @@ function StageComponent() {
                             isDragging : false,
                         }),
                         firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/`).update({
-                            roomImage: uri,
+                            // roomImage: uri,
                             lastModified:firebaseServer.database.ServerValue.TIMESTAMP,
                         })
                     ])
@@ -724,7 +724,7 @@ function StageComponent() {
                             favoriteList : [],
                         }),
                         firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/`).update({
-                            roomImage: uri,
+                            // roomImage: uri,
                             lastModified:firebaseServer.database.ServerValue.TIMESTAMP,
                         })
                     ])
@@ -754,7 +754,7 @@ function StageComponent() {
                             isDragging : false,
                         }),
                         firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/`).update({
-                            roomImage: uri,
+                            // roomImage: uri,
                             lastModified:firebaseServer.database.ServerValue.TIMESTAMP,
                         })
                     ]);

@@ -20,7 +20,7 @@ function RectangularPostIt(rectRef: React.MutableRefObject<any>, convertTypeToCo
         })
       )
       for(let i in snapshots){
-        newDisplayNameList.push(snapshots[i].val().displayName)
+        newDisplayNameList.push(snapshots[i].val()?.displayName)
       }
       setDisplayNameList(newDisplayNameList);
     }())

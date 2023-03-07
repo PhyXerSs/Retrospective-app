@@ -20,7 +20,7 @@ function CircularPostIt(circleRef: React.MutableRefObject<any>, convertTypeToCol
           })
         )
         for(let i in snapshots){
-          newDisplayNameList.push(snapshots[i].val().displayName)
+          newDisplayNameList.push(snapshots[i].val()?.displayName)
         }
         setDisplayNameList(newDisplayNameList);
       }())
