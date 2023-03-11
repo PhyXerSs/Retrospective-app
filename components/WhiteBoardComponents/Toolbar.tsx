@@ -361,7 +361,7 @@ function Toolbar({handleSaveImage , autoGetUrlRoomImage}:{handleSaveImage:any , 
                     isDragging : false,
                 }),
                 firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/`).update({
-                    roomImage: uriRoomImage,
+                    // roomImage: uriRoomImage,
                     lastModified:firebaseServer.database.ServerValue.TIMESTAMP,
                 })
               ])
@@ -547,7 +547,7 @@ function Toolbar({handleSaveImage , autoGetUrlRoomImage}:{handleSaveImage:any , 
                                                     isDragging : false,
                                                 }),
                                                 firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/`).update({
-                                                    roomImage: uri,
+                                                    // roomImage: uri,
                                                     lastModified:firebaseServer.database.ServerValue.TIMESTAMP,
                                                 })
                                             ])
@@ -626,7 +626,7 @@ function Toolbar({handleSaveImage , autoGetUrlRoomImage}:{handleSaveImage:any , 
                                                                     favoriteList : [],
                                                                 }),
                                                                 firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/`).update({
-                                                                    roomImage: uri,
+                                                                    // roomImage: uri,
                                                                     lastModified:firebaseServer.database.ServerValue.TIMESTAMP,
                                                                 })
                                                             ]) 
@@ -675,7 +675,7 @@ function Toolbar({handleSaveImage , autoGetUrlRoomImage}:{handleSaveImage:any , 
                                                                     favoriteList : [],
                                                                 }),
                                                                 firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/`).update({
-                                                                    roomImage: uri,
+                                                                    // roomImage: uri,
                                                                     lastModified:firebaseServer.database.ServerValue.TIMESTAMP,
                                                                 })
                                                             ])
@@ -746,7 +746,7 @@ function Toolbar({handleSaveImage , autoGetUrlRoomImage}:{handleSaveImage:any , 
                                                                     isDragging : false,
                                                                 }),
                                                                 firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/`).update({
-                                                                    roomImage: uri,
+                                                                    // roomImage: uri,
                                                                     lastModified:firebaseServer.database.ServerValue.TIMESTAMP,
                                                                 })
                                                             ]) 

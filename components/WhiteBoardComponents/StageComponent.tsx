@@ -148,7 +148,7 @@ function StageComponent() {
     function autoGetUrlRoomImage(){
         stageRef.current.scaleX(1.25);
         stageRef.current.scaleY(1.25);
-        let uri = stageRef.current.toDataURL({x:stageRef.current.attrs.x-960 , y:stageRef.current.attrs.y-540,mimeType:'image/jpeg'});
+        let uri = stageRef.current.toDataURL({x:stageRef.current.attrs.x-960 , y:stageRef.current.attrs.y-540,mimeType:'image/jpeg' , quality : 0 , pixelRatio : 2});
         stageRef.current.scaleX(stageScale);
         stageRef.current.scaleY(stageScale);
         return uri as string;
@@ -623,7 +623,7 @@ function StageComponent() {
                     isDragging : false,
                 }),
                 firebase.database().ref(`retrospective/${roomData.roomId}/roomDetail/`).update({
-                    roomImage: uriRoomImage,
+                    // roomImage: uriRoomImage,
                     lastModified:firebaseServer.database.ServerValue.TIMESTAMP,
                 }),
             ])
